@@ -1,4 +1,5 @@
 177,0
+S,ReplaceAll,Replace all instances of the string char1 with char2 in string,0,3,0,0,0,0,0,0,0,298,,0,0,298,,0,0,298,,298,-38,-38,-38,-38,-38
 S,getLines,turn text file into lines,0,1,0,0,0,0,0,0,0,298,,-1,-38,-38,-38,-38,-38
 S,IsNumberField,Take the associative algebra over Q and make a number field,0,1,0,0,0,0,0,0,0,11,,36,27,-38,-38,-38,-38
 S,SquarefreeFactorization,"x = a*q^2 where a is a squarefree integer, return a, q",0,1,0,0,0,0,0,0,0,267,,267,-38,-38,-38,-38,-38

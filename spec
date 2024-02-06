@@ -22,4 +22,8 @@ code
       utils.m
       read-write.m
       }
+  quaternion_orders
+    {
+     enumerate-O.m
+    }
   }
