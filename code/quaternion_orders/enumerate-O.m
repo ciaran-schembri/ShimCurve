@@ -37,18 +37,23 @@ intrinsic LMFDBRowEntry(O::AlgQuatOrd) -> MonStgElt
   d:= Discriminant(O);
   gensO:=Generators(O);
   gensOijk:=[ Eltseq(elt) : elt in gensO ];
+
   denominatorsLCM:=[ LCM([Denominator(a) : a in seq]) : seq in gensOijk ];
+  denominatorsLCM_str:=Sprint(denominatorsLCM);
+  denominatorsLCM_str := ReplaceString(denominatorsLCM_str,"[","{");
+  denominatorsLCM_str := ReplaceString(denominatorsLCM_str,"]","}");
+
   gensOijk_integral:=[ [ (denominatorsLCM[i])*gensOijk[i][j] : j in [1..4] ] : i in [1..4] ];
   gensOijk_integral_str := [ Sprintf("%o",lst) : lst in gensOijk_integral ];
   gensOijk_integral_str := Sprint(gensOijk_integral_str);
-  //gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"[","{");
-  //gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"]","}");
+  gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"[","{");
+  gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"]","}");
   
 
   label:=LMFDBLabel(O);
   a,b:=StandardForm(B);
 
-  return Sprintf("%o ? %o ? %o ? %o ? %o ? %o ? %o",label,a,b,D,d,gensOijk_integral_str,denominatorsLCM);
+  return Sprintf("%o ? %o ? %o ? %o ? %o ? %o ? %o",label,a,b,D,d,gensOijk_integral_str,denominatorsLCM_str);
 end intrinsic;
 
 
