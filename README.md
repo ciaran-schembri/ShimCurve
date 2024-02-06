@@ -9,6 +9,9 @@ In analogy with the H < GL_2(Z/NZ) for modular curves, there is a H which depend
 
 G plays the role of GL_2(Z/NZ), (O/N)^x is where the Galois representation lives if the surface has QM defined already and \Aut_{\pm \mu}(O) is like refined Atkin-Lehner involutions. A "PQM surface" has its Galois representatin contained in G, this is called the enhanced representation, see section 3.5 of https://arxiv.org/abs/2308.15193 for more details.
 
+Make sure you are working one directory above this repository. To load the intrinsics do
+AttachSpec("ShimCurve/spec");
+
 Types
 
 Since it is not straightforward to work with G directly in MAGMA, new 'types' have been created to support it. These are:
