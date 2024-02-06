@@ -288,17 +288,17 @@ end intrinsic;
 
 
   
-intrinsic Parent(elt::AlgQuatOrdResElt) -> AlqQuatOrdRes
+intrinsic Parent(elt::AlgQuatOrdResElt) -> AlgQuatOrdRes
   {.}
   return elt`parent;    
 end intrinsic;
 
-intrinsic Parent(elt::AlgQuatProjElt) -> AlqQuatProj
+intrinsic Parent(elt::AlgQuatProjElt) -> AlgQuatProj
   {.}
   return elt`parent;    
 end intrinsic;
 
-intrinsic Parent(elt::AlgQuatEnhElt) -> AlqQuatProj
+intrinsic Parent(elt::AlgQuatEnhElt) -> AlgQuatProj
   {.}
   return elt`parent;    
 end intrinsic;

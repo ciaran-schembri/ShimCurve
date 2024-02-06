@@ -40,6 +40,10 @@ intrinsic LMFDBRowEntry(O::AlgQuatOrd) -> MonStgElt
   denominatorsLCM:=[ LCM([Denominator(a) : a in seq]) : seq in gensOijk ];
   gensOijk_integral:=[ [ (denominatorsLCM[i])*gensOijk[i][j] : j in [1..4] ] : i in [1..4] ];
   gensOijk_integral_str := [ Sprintf("%o",lst) : lst in gensOijk_integral ];
+  gensOijk_integral_str := Sprint(gensOijk_integral_str);
+  //gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"[","{");
+  //gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"]","}");
+  
 
   label:=LMFDBLabel(O);
   a,b:=StandardForm(B);
