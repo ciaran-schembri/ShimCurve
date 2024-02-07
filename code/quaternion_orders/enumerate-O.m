@@ -90,6 +90,7 @@ end intrinsic;
 intrinsic LMFDBLabel(O::AlgQuatOrd,mu::AlgQuatElt) -> MonStgElt
   {Given a quaternion order O, generate its LMFDB label}
   
+  
   if IsMaximal(O) then 
     B := QuaternionAlgebra(O);
     D := Discriminant(B);
@@ -115,18 +116,81 @@ is_cyclic, boolean, whether Aut_mu(O) is cyclic or not
 generators, integer[], list of lists (of length 1 or 2) representing the elements of O generating Aut_mu(O) (coefficients in O)
 */
 
+
 /*
+LMFDBRowEntry(O::AlgQuatOrd, mu::AlgQuatElt) -> MonStgElt
+  {}
+  B:=QuaternionAlgebra(O);
+  D:=Discriminant(B);
+  d:= Discriminant(O);
+
+  label:=LMFDBLabel(O,mu);
+  labelO:=LMFDBLabel(O);
+
+  muO:=Eltseq(O!mu);
+  muO_str:=Sprint(muO);
+  muO_str:=ReplaceString(muO_str,"[","{");
+  muO_str:=ReplaceString(muO_str,"]","}"); 
+
+  deg_mu := DegreeOfPolarizedElement(O,mu);
+  nrd_mu := SquarefreeFactorization(Norm(mu));
+
+  AutmuO := Aut(O,mu);
+  AutmuO_label := GroupName(Domain(AutmuO));
+  if IsCyclic(Domain(AutmuO)) then
+    AutmuO_generators := Sprint([ O!(AutmuO(Domain(AutmuO).1)`element) ]);
+  else 
+    AutmuO_generators := Sprint([ O!(AutmuO(Domain(AutmuO).i)`element) : i in [1,2] ]);
+  end if;
+
+  AutmuO_generators_str := ReplaceString(AutmuO_generators,"[","{");
+  AutmuO_generators_str := ReplaceString(AutmuO_generators,"]","}");
+
+
+  gensO:=Generators(O);
+  gensOijk:=[ Eltseq(elt) : elt in gensO ];
+
+  denominatorsLCM:=[ LCM([Denominator(a) : a in seq]) : seq in gensOijk ];
+  denominatorsLCM_str:=Sprint(denominatorsLCM);
+  denominatorsLCM_str := ReplaceString(denominatorsLCM_str,"[","{");
+  denominatorsLCM_str := ReplaceString(denominatorsLCM_str,"]","}");
+
+  gensOijk_integral:=[ [ (denominatorsLCM[i])*gensOijk[i][j] : j in [1..4] ] : i in [1..4] ];
+  gensOijk_integral_str := [ Sprintf("%o",lst) : lst in gensOijk_integral ];
+  gensOijk_integral_str := Sprint(gensOijk_integral_str);
+  gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"[","{");
+  gensOijk_integral_str := ReplaceString(gensOijk_integral_str,"]","}");
+  
+
+  label:=LMFDBLabel(O);
+  a,b:=StandardForm(B);
+
+  return Sprintf("%o?%o?%o?%o?%o?%o?%o",label,a,b,D,d,gensOijk_integral_str,denominatorsLCM_str);
+
+
+
+  
+
+
 intrinsic EnumerateOmu(boundO::RngIntElt,boundmu : verbose:=true,write:=false) -> Any
   {loop over maximal orders of discriminant up to bound and output their lmfdb row entry}
   
   if write eq true then 
     filename:=Sprintf("ShimCurve/data/quaternion-orders/quaternion-orders-polarized.m");
-    Write(filename, Sprint("label ? labelO ? i_square ? j_square ? discO ? discB ? gens_numerators ? gens_denominators"));
+    Write(filename, Sprint("label ? labelO ? mu ? deg_mu ? nrd_mu ? AutmuO_label ? AutmuO_is_cyclic ? AutmuO_generators"));
     Write(filename, Sprint("text ? integer ? integer ? integer ? integer ? integer[] ? integer[]\n"));
   end if;
 
-  for D in [6..bound] do 
-    if IsSquarefree(D) and IsEven(#PrimeDivisors(D)) then 
+  for D in [6..bound] do
+    if IsSquarefree(D) and IsEven(#PrimeDivisors(D)) then
+      for deg in [1..boundmu] do 
+      B:=QuaternionAlgebra(D);
+      O:=MaximalOrder(B); 
+      if HasPolarizationOfDegree(O,1) then 
+        tr,mu := HasPolarizationOfDegree(O,1);
+
+
+ 
       B:=QuaternionAlgebra(D);
       O:=MaximalOrder(B);
       row:=LMFDBRowEntry(O);
@@ -141,8 +205,8 @@ intrinsic EnumerateOmu(boundO::RngIntElt,boundmu : verbose:=true,write:=false) -
   end for;
   return "";
 end intrinsic;
-*/
 
+*/
 
 
 
