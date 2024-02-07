@@ -1,4 +1,9 @@
 
+intrinsic ReplaceAll(string::MonStgElt, char1::MonStgElt, char2::MonStgElt) -> MonStgElt
+  {Replace all instances of the string char1 with char2 in string}
+  return Pipe(Sprintf("sed \"s/%o/%o/g\"", char1, char2), string);
+end intrinsic;
+
 
 
 intrinsic getLines(file::MonStgElt) -> Any
@@ -126,6 +131,7 @@ intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunF
 end intrinsic;
 
 
+/*
 intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt 
   {Sprint the sequence seq, if oneline is true then return it as a one-line string.}
   if oneline eq false then 
@@ -146,7 +152,7 @@ intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt
     return elts;
   end if;
 end intrinsic;
-
+*/
 
 
 

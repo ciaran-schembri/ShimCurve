@@ -26,9 +26,9 @@ S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,-1,-38,-38,-38,-38,-3
 S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,-1,-38,-38,-38,-38,-38
 S,PrimitiveElement,We consider the coset of x in B^x/Q^x: this coset has a unique representative b of squarefree and integral norm. Return b,0,1,0,0,0,0,0,0,0,18,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,PrimitiveElement,We consider the coset of x in B>0^x/Q^x: this coset has a unique representative b of squarefree and integral norm. Return b,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
-S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,AlqQuatOrdRes,-38,-38,-38,-38,-38
-S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,AlqQuatProj,-38,-38,-38,-38,-38
-S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,AlqQuatProj,-38,-38,-38,-38,-38
+S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,AlgQuatOrdRes,-38,-38,-38,-38,-38
+S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,AlgQuatProj,-38,-38,-38,-38,-38
+S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,AlgQuatProj,-38,-38,-38,-38,-38
 S,quo,,0,2,0,0,0,0,0,0,0,148,,0,0,19,,AlgQuatOrdRes,-38,-38,-38,-38,-38
 S,QuaternionAlgebraModuloScalars,Create B^x/F^x,0,1,0,0,0,0,0,0,0,17,,AlgQuatProj,-38,-38,-38,-38,-38
 S,EnhancedSemidirectProduct,create Autmu(O)rtimesO^x or Autmu(O)rtimes(O/N)^x,0,1,0,0,0,0,0,0,0,19,,AlgQuatEnh,-38,-38,-38,-38,-38
