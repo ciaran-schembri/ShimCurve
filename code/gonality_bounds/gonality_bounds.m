@@ -92,7 +92,7 @@ gonality_bound_list := function(D,N)
     end if;
 
     if (gon_Q_low ne gon_Q_high) or (gon_Qbar_low ne gon_Qbar_high) then
-        m_list := rational_CM_quotients(D,N);
+        m_list := rational_CM_quotients_X0DN(D,N);
 
         if #m_list gt 0 then 
 
