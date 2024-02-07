@@ -1,6 +1,57 @@
 
+function createHash(Gelts)
+    ret := AssociativeArray();
+    for e in Gelts do
+	ret[e`GL4] := e`enhanced;
+    end for;
+    return ret;
+end function;
 
+function getEnhancedElt(h : Hash := AssociativeArray())
+    if IsEmpty(Keys(Hash)) then
+	Error("Not implemented without specifying hash table!");
+    end if;
+    return Hash[h];
+end function;
 
+function getDeterminantImage(H : Hash := AssociativeArray())
+    gens := [H.i : i in [1..Ngens(H)]];
+    images := [];
+    for g in gens do
+	e := getEnhancedElt(g : Hash := Hash);
+	Append(~images, [[Norm(e)]]);
+    end for;
+    N := Modulus(BaseRing(H));
+    return sub<GL(1,Integers(N)) | images>; 
+end function;
+
+intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum
+{return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
+   
+  assert N gt 2;
+  AutFull:=Aut(O,mu);
+  assert MapIsHomomorphism(AutFull : injective:=true);
+
+  G,Gelts:=EnhancedImageGL4(AutFull,O,N);
+  
+  assert -G!1 in G;
+
+  subs:=Subgroups(G);
+  
+  surjH := [H : H in subs | getDeterminantImage(H`subgroup : Hash := createHash(Gelts)) eq GL(1,Integers(N))];
+  
+  NBOplusgens_enhanced:=NormalizerPlusGeneratorsEnhanced(O,mu);
+  NBOplusgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in NBOplusgens_enhanced ]; 
+  G1plus:=sub< G | NBOplusgensGL4 >;
+  assert #G/#G1plus eq 2;
+  K:=[ k : k in SemidirectToNormalizerKernel(O,mu) ];
+  KGlist:=[ EnhancedElementInGL4modN(k,N) : k in K ];
+  KG:=sub< G1plus | [ EnhancedElementInGL4modN(k,N) : k in K ] >;
+  assert #KG eq #K;
+  
+  return [H : H in surjH | KG subset H`subgroup];
+  
+end intrinsic;
 
 
 intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,PQMtorsion:=false,verbose:=true, lowgenus:=false, write:=false) -> Any
