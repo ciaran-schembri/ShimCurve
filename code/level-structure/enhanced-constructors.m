@@ -263,6 +263,10 @@ intrinsic Order(g::AlgQuatEnhElt) -> Any
   return "infinity";
 end intrinsic;
 
+intrinsic Norm(x::AlgQuatEnhElt) -> RngIntResElt
+{Norm of the element of the enhanced semidirect product as an element of (Z/N)^x}
+    return Norm(x`element[2]);
+end intrinsic;
 
 intrinsic PrimitiveElement(x::AlgQuatElt) -> AlgQuatProjElt
   {We consider the coset of x in B^x/Q^x: this coset has a unique representative
@@ -441,6 +445,13 @@ intrinsic IsUnit(x::AlgQuatOrdResElt) -> BoolElt
   end if;
 end intrinsic;
 
+
+intrinsic Norm(x::AlgQuatOrdResElt) -> RngIntResElt
+{Norm of the element of the enhanced semidirect product as an element of (Z/N)^x}
+    N := Modulus(Parent(x));
+    return Integers(N)!Norm(x`element);
+end intrinsic;
+
 intrinsic Set(OmodN::AlgQuatOrdRes) -> Set 
   {return the set of elements O/N}
 
@@ -452,6 +463,10 @@ intrinsic Set(OmodN::AlgQuatOrdRes) -> Set
   return { OmodN!piN(x) : x in set };
 end intrinsic;
 
+intrinsic Modulus(OmodN::AlgQuatOrdRes) -> RngIntElt
+{Return the level N of OmodN}
+    return OmodN`quaternionideal;
+end intrinsic;
 
 intrinsic UnitGroup(OmodN::AlgQuatOrdRes) -> GrpMat, Map
   {return (O/N)^x as a permutation group G, the second value is the isomorphism G ->(O/N)^x}
