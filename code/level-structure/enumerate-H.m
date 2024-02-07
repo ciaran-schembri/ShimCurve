@@ -25,7 +25,35 @@ function getDeterminantImage(H : Hash := AssociativeArray())
     return sub<GL(1,Integers(N)) | images>; 
 end function;
 
-intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum
+intrinsic GetG1plus(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G::GrpMat) -> GrpMat
+{Returns G1plus given G.}
+    NBOplusgens_enhanced:=NormalizerPlusGeneratorsEnhanced(O,mu);
+    NBOplusgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in NBOplusgens_enhanced ]; 
+    G1plus:=sub< G | NBOplusgensGL4 >;
+    assert #G/#G1plus eq 2;
+    return G1plus;
+end intrinsic;
+
+intrinsic GetKernelAsSubgroup(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G1plus::GrpMat) -> GrpMat
+{Returns the kernel of the semidirect to normalizer map, as a subgroup of G.}
+    K:=[ k : k in SemidirectToNormalizerKernel(O,mu) ];
+    KGlist:=[ EnhancedElementInGL4modN(k,N) : k in K ];
+    KG:=sub< G1plus | [ EnhancedElementInGL4modN(k,N) : k in K ] >;
+    assert #KG eq #K;
+    return KG;
+end intrinsic;
+
+intrinsic EnumerateGerbiestSurjectiveH(G::GrpMat, Gelts::SeqEnum[Rec], KG::GrpMat) -> SeqEnum[Rec]
+{return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
+   
+  subs:=Subgroups(G);
+  N := Modulus(BaseRing(G));
+  surjH := [H : H in subs | getDeterminantImage(H`subgroup : Hash := createHash(Gelts)) eq GL(1,Integers(N))];
+  return [H : H in surjH | KG subset H`subgroup];
+  
+end intrinsic;
+
+intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum[Rec]
 {return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
    
   assert N gt 2;
@@ -36,23 +64,46 @@ intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt
   
   assert -G!1 in G;
 
-  subs:=Subgroups(G);
+  G1plus := GetG1plus(O, mu, N, G);
   
-  surjH := [H : H in subs | getDeterminantImage(H`subgroup : Hash := createHash(Gelts)) eq GL(1,Integers(N))];
+  KG := GetKernelAsSubgroup(O, mu, N, G1plus);
   
-  NBOplusgens_enhanced:=NormalizerPlusGeneratorsEnhanced(O,mu);
-  NBOplusgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in NBOplusgens_enhanced ]; 
-  G1plus:=sub< G | NBOplusgensGL4 >;
-  assert #G/#G1plus eq 2;
-  K:=[ k : k in SemidirectToNormalizerKernel(O,mu) ];
-  KGlist:=[ EnhancedElementInGL4modN(k,N) : k in K ];
-  KG:=sub< G1plus | [ EnhancedElementInGL4modN(k,N) : k in K ] >;
-  assert #KG eq #K;
-  
-  return [H : H in surjH | KG subset H`subgroup];
+  return EnumerateGerbiestSurjectiveH(G, Gelts, KG);
   
 end intrinsic;
 
+intrinsic EllipticElementsGL4(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum
+{return the elliptic elements of the associated Shimura curve as elements in GL4(Z/NZ).}
+    elliptic_elements_enhanced:=EnhancedEllipticElements(O,mu);
+    assert forall(u){ <u,v> : u,v in elliptic_elements_enhanced | 
+		      EnhancedElementInGL4modN(u,N)*EnhancedElementInGL4modN(v,N) eq EnhancedElementInGL4modN(u*v,N) };
+    elliptic_eltsGL4:= [ EnhancedElementInGL4modN(e,N) : e in elliptic_elements_enhanced ];
+    return elliptic_eltsGL4;
+end intrinsic;
+
+intrinsic Genus(H::Rec, G1plus::GrpMat, KG::GrpMat, elliptic_eltsGL4::SeqEnum) -> RngIntElt
+{return the genus of the Shimura curve corresponding to H.}
+    Hgp:=H`subgroup; 
+    G1plusmodKG,Gmap:= quo< G1plus | KG >;
+    
+    H1plus := sub< G1plus | Hgp meet G1plus >;
+    H1plusKG:= sub< G1plus | H1plus, KG >;
+    H1plusKGmodKG:= quo< H1plusKG | KG >;
+
+    H1plusquo:=Gmap(H1plus);
+    if not IsIsomorphic(H1plusquo,H1plusKGmodKG) then 
+      Error("This should not happen - H should contain the kernel");
+    end if;
+    
+    T:=CosetTable(G1plusmodKG,H1plusquo);
+    piH:=CosetTableToRepresentation(G1plusmodKG,T);
+    
+    sigma := [ piH(Gmap(v)) : v in elliptic_eltsGL4 ];
+    assert &*(sigma) eq Id(Parent(sigma[1]));
+    genus:=EnhancedGenus(sigma);
+    
+    return genus;
+end intrinsic;
 
 intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,PQMtorsion:=false,verbose:=true, lowgenus:=false, write:=false) -> Any
   {return all of the enhanced subgroups in a list with each one being a record}
