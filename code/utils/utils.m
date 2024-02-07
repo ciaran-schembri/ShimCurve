@@ -131,6 +131,7 @@ intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunF
 end intrinsic;
 
 
+/*
 intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt 
   {Sprint the sequence seq, if oneline is true then return it as a one-line string.}
   if oneline eq false then 
@@ -151,7 +152,7 @@ intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt
     return elts;
   end if;
 end intrinsic;
-
+*/
 
 
 
