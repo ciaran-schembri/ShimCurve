@@ -1,3 +1,13 @@
+
+/*Processes the vertices from the file algdat.dat*/
+processvertices_fromfile() = {
+  my(v);
+  v = readvec("algdat.dat");
+  return(processvertices(v[1], v[2], v[3]));
+}
+
+
+
 /*Inputs 
 ab: pair [a, b]
 Obasis: vector of basis elements of the (maximal) order O where each element is of the form [e, f, g, h] representing a basis element of e+fi+gj+hk (maximal order)
