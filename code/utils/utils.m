@@ -111,7 +111,7 @@ end intrinsic;
 
 
 
-
+/*
 intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunFracSchElt[CrvEll[FldRat]]
   {If phi(x) = f(x)/g(x) and f = c^2*f0, g = d^2*g0 with f0, g0 irreducible; return f0/g0.}
   
@@ -143,7 +143,7 @@ intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunF
   //assert Sprint(phi) eq Sprint(cdivd^2*phi_sqfree);
 
   return phi_sqfree, c/d;
-end intrinsic;
+end intrinsic;*/
 
 intrinsic remove_whitespace(X::MonStgElt) -> MonStgElt
 { Strips spaces and carraige returns from string; much faster than StripWhiteSpace. }

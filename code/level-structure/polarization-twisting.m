@@ -78,10 +78,19 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   b:=Integers()!Trace(skew_commute_basis[1]*skew_commute_basis[2]);
   c:=Integers()!Norm(skew_commute_basis[2]);
   Dform:=b^2-4*a*c;
-  Q:=QuadraticForm(Dform);
+  assert Dform lt 0;
+  Q:=QuadraticForms(Dform);
   q := Q![a,b,c];
+  L:=Lattice(q);
   [ Norm(b) : b in skew_commute_basis ];
+  solns:=ShortVectors(L,10);
+  for soln in solns do 
+    if IsDivisibleBy(disc,soln[2]);
+      x,y:=Explode(Eltseq(soln[1]));
+      chi:=x*skew_commute_basis[1] + y*skew_commute_basis[2];
+      assert IsDivisibleBy(disc,Norm(chi));
 
+  [ [Norm(a*skew_commute_basis[1] + b*skew_commute_basis[2]),a,b] : a,b in [-2..2] ];
   //First we find twisting elements for an isomorphic quaternion algebra to B given by 
   //Bram<i,j> = (-D*del,m | Q). Then we find an isomorphism phi: Bram -> B. Otwisted_basis 
   // is the phi(Basis(MaximalOrder(Bram))). This defines an order of B and phi(i), phi(j) 
