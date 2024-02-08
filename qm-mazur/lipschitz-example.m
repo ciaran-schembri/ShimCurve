@@ -38,7 +38,8 @@ chi:=B!(i-i*j);
 
 AutmuO:=Aut(O,mu);
 
-G,Gelts:=EnhancedImageGL4(AutmuO,O,2);
+G, ONxinGL4, Ahom := EnhancedImageGL4(AutmuO,O,2);
+Gelts := [g : g in G];
 subs:=Subgroups(G);
 
 
@@ -69,19 +70,16 @@ assert not(IsGLConjugate(mod2rep,Hmods_subgroup[3]));
 
 Hcorrect:=Hmods_subgroup[2];
 
-enhanced_elts:=[ g`enhanced : g in Gelts ];
+basis := Basis(O);
+Hi := UnitGroupToGL4modN(basis[2], 2);
+Hj := UnitGroupToGL4modN(basis[3], 2);
+Hij := UnitGroupToGL4modN(basis[4], 2);
 
-Hi:=[ a : a in Gelts | Sprint(a`enhanced) eq "<1, [0 1 0 0]>" ][1];
-Hj:=[ a : a in Gelts | Sprint(a`enhanced) eq "<1, [0 0 1 0]>" ][1];
-Hij:=[ a : a in Gelts | Sprint(a`enhanced) eq "<1, [0 0 0 1]>" ][1];
+Hi in Hcorrect;
+Hj in Hcorrect;
+Hij in Hcorrect;
 
-ChangeRing(Hi`GL4,GF(2)) in Hcorrect;
-ChangeRing(Hj`GL4,GF(2)) in Hcorrect;
-ChangeRing(Hij`GL4,GF(2)) in Hcorrect;
-
-
-inH:=[ a : a in Gelts | ChangeRing(a`GL4,GF(2)) in Hcorrect ];
-inHenhanced:=[ a`enhanced : a in inH ];
+inHenhanced := [GL4ToPair(x, O, Ahom) : x in Hcorrect];
 
 
 
