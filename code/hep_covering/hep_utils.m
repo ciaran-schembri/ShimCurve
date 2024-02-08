@@ -121,24 +121,20 @@ end function;
 function LocateLayer(r,radii_minandmax);
     // given a list of tuples [r_min, r_max] of minimum and maximum radii of each layer of heptagonal tiling,
     // return the layers closest to r
-    L1 := [i : i in [1..#radii_minandmax] | radii_minandmax[i,1] lt r and r lt radii_minandmax[i,2]];
-    if L1 ne [] then
-        return L1;
-    end if;
-    L2 := Sort(Setseq(&join[{i, i+1} : i in [1..#radii_minandmax-1] | radii_minandmax[i,2] lt r and r lt radii_minandmax[i+1,1]]));
-    return L2;    
-
+    L1 := {i : i in [1..#radii_minandmax] | radii_minandmax[i,1] lt r and r lt radii_minandmax[i,2]};
+    L2 := &join[{i, i+1} : i in [1..#radii_minandmax-1] | radii_minandmax[i,2] lt r and r lt radii_minandmax[i+1,1]];
+    return Sort(Setseq(L1 join L2));
 end function;
 
 function LocatePoint(z, tiling_centers : brute_force := false);
-    // tiling centers is a sequence of sequence of triples [argument, absolute value, complex number] by layer.
-    // returns the centers of the heptagonal discs containing z
+// tiling centers is a sequence of sequence of triples [argument, absolute value, complex number] by layer.
+// returns the centers of the heptagonal discs containing z
     
     if Distance(D!z, zeropt) lt r_hept then return tiling_centers[1,1]; end if;
     radii_minandmax := [[Minimum([y[2] : y in x]), Maximum([y[2] : y in x])] : x in tiling_centers];
-    //print radii_minandmax;
+//    print radii_minandmax;
     allradii := [{ChangePrecision(y[2],5) : y in x} : x in tiling_centers];
-    ///print allradii;
+//    print allradii;
     r := AbsoluteValue(z);
     theta := Argument(z);
     L := LocateLayer(r,radii_minandmax);
@@ -146,9 +142,12 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         print "Not enough layers";
         return false;
     end if;
-    //print L, #tiling_centers;
+//    print L;
+//    print [#x : x in tiling_centers];
+    Exclude(~L,1);
     output_centers := [];
     for l in L do
+//        print l;
         if l gt #tiling_centers then
             print "Not enough layers";
             return false;
@@ -164,10 +163,18 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         end if;
         thetas_l := [x[1] : x in tiling_centers[l]];
         j1 := Locate(theta,thetas_l);
-        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1 mod #tiling_centers[l] eq 0) select 1 else j1+1]];
+//        print j1;
+        if j1 mod #tiling_centers[l] eq 0 then
+            two_possibilities := [tiling_centers[l,1],tiling_centers[l,#tiling_centers[l]]];
+        else
+            two_possibilities := [tiling_centers[l,j1],tiling_centers[l,j1+1]];
+        end if;
+        print two_possibilities;
         for x in two_possibilities do
             center := D ! x[3];
-            if Distance(center,D ! z) le r_hept then
+            dist := Distance(center,D ! z);
+            print dist, r_hept;
+            if dist le r_hept then
                 Append(~output_centers, x);
             end if;
         end for;
