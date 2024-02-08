@@ -1,65 +1,38 @@
 
 // This should work for small groups
 function GroupLabel(grp)
-    assert #grp lt 1000;
-    a, b := Explode(IdentifyGroup(grp));
-    return Sprintf("%o.%o", a, b);
-end function;
-
-function createHash(Gelts)
-    ret := AssociativeArray();
-    for e in Gelts do
-	ret[e`GL4] := e`enhanced;
-    end for;
-    return ret;
-end function;
-
-function createInverseHash(Gelts)
-    ret := AssociativeArray();
-    for e in Gelts do
-	ret[e`enhanced] := e`GL4;
-    end for;
-    return ret;
-end function;
-
-function getEnhancedElt(h : Hash := AssociativeArray())
-    if IsEmpty(Keys(Hash)) then
-	Error("Not implemented without specifying hash table!");
+    if CanIdentifyGroup(#grp) then
+        a, b := Explode(IdentifyGroup(grp));
+        return Sprintf("%o.%o", a, b);
     end if;
-    return Hash[h];
+    // For now, we give up.
+    return "\\N";
 end function;
 
-function getDeterminantImage(H : Hash := AssociativeArray())
-    gens := [H.i : i in [1..Ngens(H)]];
-    images := [];
-    for g in gens do
-	e := getEnhancedElt(g : Hash := Hash);
-	Append(~images, [[Norm(e)]]);
-    end for;
+function getDeterminantImage(H, O, Ahom)
     N := Modulus(BaseRing(H));
-    return sub<GL(1,Integers(N)) | images>; 
+    gens := [H.i : i in [1..Ngens(H)]];
+    ONparts := [GL4ToPair(h, O, Ahom)[2] : h in gens];
+    return sub<GL(1, Integers(N)) | [[[Norm(x)]] : x in ONparts]>;
 end function;
 
-// !!!! TODO - This is highly inefficient (p^4 inefficient) !!!! replace by something sensible
-function getKernelOfReduction(OmodN, p, inv_hash, G)
+function getKernelOfReduction(OmodN, p, G)
     N := Modulus(OmodN);
-    assert(N mod (N div p) eq 0);
+    assert IsDivisibleBy(N, p);
     if (p eq N) then
-	return sub< G | [x : x in UnitGroup(OmodN)]>;
+        return G;
     end if;
-    param := CartesianPower([0..p - 1],4);
-    ker_p := [1+(N div p)*O![y : y in TupleToList(x)] : x in param];
-    assert &and[IsUnit(y) : y in ker_p];
-    GG := Universe(Keys(inv_hash));
-    return sub<G|[inv_hash[GG!<1,x>] : x in ker_p]>;
+    gens := [G.i : i in [1..Ngens(G)]];
+    R := Integers(N div p);
+    phom := hom<G -> GL(4, R) | [<g, ChangeRing(g, R)> : g in gens]>;
+    return Kernel(phom);
 end function;
 
-function getAllReductionKernels(OmodN, inv_hash, G)
+function getAllReductionKernels(OmodN, G)
     N := Modulus(OmodN);
     ker_reds := AssociativeArray();
     for p in PrimeDivisors(N) do
-	ker_p := getKernelOfReduction(OmodN, p, inv_hash, G);
-	ker_reds[p] := ker_p;
+        ker_reds[p] := getKernelOfReduction(OmodN, p, G);
     end for;
     return ker_reds;
 end function;
@@ -67,7 +40,7 @@ end function;
 intrinsic GetG1plus(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G::GrpMat) -> GrpMat
 {Returns G1plus given G.}
     NBOplusgens_enhanced:=NormalizerPlusGeneratorsEnhanced(O,mu);
-    NBOplusgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in NBOplusgens_enhanced ]; 
+    NBOplusgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in NBOplusgens_enhanced ];
     G1plus:=sub< G | NBOplusgensGL4 >;
     assert #G/#G1plus eq 2;
     return G1plus;
@@ -82,16 +55,16 @@ intrinsic GetKernelAsSubgroup(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G1plus::
     return KG;
 end intrinsic;
 
-intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, G::GrpMat, Gelts::SeqEnum[Rec], KG::GrpMat) -> SeqEnum[Rec]
+intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, AutFull::Map, G::GrpMat, ONx::GrpMat, Ahom::HomGrp, KG::GrpMat) -> SeqEnum[Rec]
 {return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
-   
-  subs:=Subgroups(G);
-  N := Modulus(BaseRing(G));
-  surjH := [H : H in subs | getDeterminantImage(H`subgroup : Hash := createHash(Gelts)) eq GL(1,Integers(N))];
-  surj_gerby_H := [H : H in surjH | KG subset H`subgroup];
-  inv_hash := createInverseHash(Gelts);
 
-  ker_reds := getAllReductionKernels(OmodN, inv_hash, G);
+  subs:=Subgroups(G);
+  O := OmodN`quaternionorder;
+  N := Modulus(BaseRing(G));
+  surjH := [H : H in subs | #getDeterminantImage(H`subgroup, O, Ahom) eq EulerPhi(N)];
+  surj_gerby_H := [H : H in surjH | KG subset H`subgroup];
+
+  ker_reds := getAllReductionKernels(OmodN, G meet ONx);
   prime_kernels_in_H := [[] : H in surj_gerby_H];
   // !!!! TODO !!! Might be more efficient to get all subgroups containing a kernel of reduction every time
   for p in Keys(ker_reds) do
@@ -101,7 +74,7 @@ intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, G::GrpMat, Gelts::S
 	  end if;
       end for;
   end for;
-  
+
   return surj_gerby_H, prime_kernels_in_H;
 end intrinsic;
 
@@ -109,22 +82,22 @@ intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt
 {return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
 
   assert N gt 2;
-  AutFull:=Aut(O,mu);
+  AutFull := Aut(O,mu);
   assert MapIsHomomorphism(AutFull : injective:=true);
 
-  G,Gelts:=EnhancedImageGL4(AutFull,O,N);
-  
+  G, ONxinGL4, Ahom := EnhancedImageGL4(AutFull,O,N);
+
   assert -G!1 in G;
 
   G1plus := GetG1plus(O, mu, N, G);
-  
+
   KG := GetKernelAsSubgroup(O, mu, N, G1plus);
-  
-  subs, prime_kernels := EnumerateGerbiestSurjectiveH(quo(O,N), G, Gelts, KG);
-  
+
+  subs, prime_kernels := EnumerateGerbiestSurjectiveH(quo(O,N), AutFull, G, ONxinGL4, Ahom, KG);
+
   // For now, we simply return the subgroups that have minimal level N
   return [subs[i] : i in [1..#subs] | prime_kernels[i] eq prime_kernel];
-  
+
 end intrinsic;
 
 intrinsic EllipticElementsGL4(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum
@@ -156,29 +129,27 @@ intrinsic GetH1plusquo(H::GrpMat[RngIntRes], G1plus::GrpMat[RngIntRes], KG::GrpM
     H1plusKGmodKG:= quo< H1plusKG | KG >;
 
     H1plusquo:=Gmap(H1plus);
-    if not IsIsomorphic(H1plusquo,H1plusKGmodKG) then 
-	Error("This should not happen, something is not right - maybe this subgroup is not coarsest?");
-    end if;
+    //if not IsIsomorphic(H1plusquo,H1plusKGmodKG) then
+    //    Error("This should not happen, something is not right - maybe this subgroup is not coarsest?");
+    //end if;
     return H1plusquo;
 end intrinsic;
 
 intrinsic FuchsianIndex(G1plusmodKG::GrpPerm, H1plusquo::GrpPerm) -> RngIntElt
 {Returns the index of H as a fuchsian group acting on the upper half plane.}
 
-    fuchsian_index:=#G1plusmodKG/#H1plusquo;
-    
-    return fuchsian_index;
+    return #G1plusmodKG/#H1plusquo;
 end intrinsic;
 
 intrinsic RamificationData(G1plusmodKG::GrpPerm, H1plusquo::GrpPerm, Gmap::Map[GrpMat[RngIntRes], GrpPerm], ells::SeqEnum[GrpMatElt[RngIntRes]]) -> SeqEnum[GrpPermElt]
 {return the genus of the Shimura curve corresponding to H.}
-    
+
     T:=CosetTable(G1plusmodKG,H1plusquo);
     piH:=CosetTableToRepresentation(G1plusmodKG,T);
-    
+
     sigma := [ piH(Gmap(v)) : v in ells ];
     assert &*(sigma) eq Id(Parent(sigma[1]));
-    
+
     return sigma;
 end intrinsic;
 
@@ -204,13 +175,11 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 Glabel
 		       >;
 
-function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
+function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, AutFull, O, N, OmodN, G, mu, level)
     s := rec< GP_SHIM_RF | >;
     Hgp:=H`subgroup;
     fixedspace:=FixedSubspace(Hgp);
     order:=H`order;
-    
-    G1plusmodKG,Gmap:= quo< G1plus | KG >;
 
     H1plusquo := GetH1plusquo(Hgp, G1plus, KG, G1plusmodKG, Gmap);
 
@@ -218,21 +187,10 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     sigma := RamificationData(G1plusmodKG, H1plusquo, Gmap, ells);
     genus := EnhancedGenus(sigma);
 
-    Henh:=[ g`enhanced : g in Gelts | g`GL4 in Hgp ];
-    Hautmus:= Setseq(Set([ h`element[1] : h in Henh ]));
-    rho_end_norms:= Set([ Abs(SquarefreeFactorization(Integers()!Norm((w`element)[1]`element))) : w in Henh ]);
-    ZmodN := Integers(N);
-    rho_end:= sub< GL(4,ZmodN) | [ NormalizingElementToGL4modN(w`element[1],O,N) : w in Henh ] >;
-
-    is_split:=true;
-    for w in Hautmus do 
-	if <w,OmodN!(O!1)> notin Henh then 
-	    is_split := false;
-	end if;
-    end for;
-
-    HGL4gens:=Generators(Hgp);
-    Henhgens:=< g`enhanced : g in Gelts | g`GL4 in HGL4gens >;
+    is_split := (order eq #(Hgp meet Image(Ahom)) * #(Hgp meet ONxinGL4));
+    Henhgens := [GL4ToPair(Hgp.i, O, Ahom) : i in [1..Ngens(Hgp)]];
+    aut_mu_norms := [Abs(SquarefreeFactorization(Integers()!Norm(AutFull(pair[1])`element))) : pair in Henhgens];
+    //rho_end := sub<GL(4,ZmodN)|[Ahom(pair[1]) : pair in Henhgens]>;
 
     s`subgroup:=Hgp;
     s`level := level;
@@ -241,13 +199,9 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`index:=Order(G) div order;
     s`fuchsian_index:=fuchsian_index;
     s`torsion:=PrimaryAbelianInvariants(fixedspace);
-    if #Hgp lt 1000 then
-	s`Glabel:=GroupLabel(Hgp);
-    else
-	s`Glabel:="\N";
-    end if;
-    s`galEnd:=GroupLabel(rho_end);
-    s`autmuO_norms:=rho_end_norms;
+    s`Glabel:=GroupLabel(Hgp);
+    s`galEnd:=GroupLabel(Domain(Ahom));
+    s`autmuO_norms:=aut_mu_norms;
     s`is_split:=is_split;
     s`generators:=Henhgens;
     s`ram_data_elts:=sigma;
@@ -263,7 +217,7 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`deg_mu := Integers()!Norm(mu) div Discriminant(O);
     s`mu_label := Sprintf("%o.%o", s`order_label, s`deg_mu);
     s`coarse_label := Sprintf("%o.%o.%o", s`level, s`index, s`genus);
-    
+
     return s;
 end function;
 
@@ -277,11 +231,11 @@ procedure updateLabels(~subs, G)
 	idx := 0;
 	prev_char := [];
 	tiebreaker := 0;
-	while idx lt #perm_chars do 
+	while idx lt #perm_chars do
 	    idx +:= 1;
 	    perm_char := perm_chars_sorted[idx][1];
-	    if (perm_char ne prev_char) then 
-		n +:= 1; 
+	    if (perm_char ne prev_char) then
+		n +:= 1;
 		tiebreaker := 0;
 	    else
 		tiebreaker +:= 1;
@@ -309,26 +263,29 @@ intrinsic GenerateDataForGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::Rng
    assert N gt 2;
    OmodN := quo(O,N);
    AutFull:=Aut(O,mu);
-   assert MapIsHomomorphism(AutFull : injective:=true);
-   
-   G,Gelts:=EnhancedImageGL4(AutFull,O,N);
-  
+
+   G, ONxinGL4, Ahom :=EnhancedImageGL4(AutFull,O,N);
+
    assert -G!1 in G;
-   
+
    G1plus := GetG1plus(O, mu, N, G);
-  
+
    KG := GetKernelAsSubgroup(O, mu, N, G1plus);
-   
-   subs, prime_kernels := EnumerateGerbiestSurjectiveH(OmodN, G, Gelts, KG);
-  
+
+   subs, prime_kernels := EnumerateGerbiestSurjectiveH(OmodN, AutFull, G, ONxinGL4, Ahom, KG);
+   print "subs", #subs;
+
    subs := [subs[i] : i in [1..#subs] | prime_kernels[i] eq prime_kernel];
-   
+   print "#filtered", #subs;
+
    ells := EllipticElementsGL4(O, mu, N);
-    
-   ret_subs := [createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level) : H in subs];
-	  
+
+   G1plusmodKG,Gmap:= quo< G1plus | KG >;
+
+   ret_subs := [createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, AutFull, O, N, OmodN, G, mu, level) : H in subs];
+
    updateLabels(~ret_subs, G);
-       
+
    return ret_subs;
 end intrinsic;
 
@@ -339,7 +296,7 @@ function writeSeqEnum(seq)
 	    str cat:= Sprintf(",");
 	end if;
 	str cat:= Sprintf("%o", elt);
-    end for;		 
+    end for;
     str cat:= "}";
     return str;
 end function;
@@ -438,9 +395,6 @@ intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,
   for H in subs do
     Hgp:=H`subgroup;
     fixedspace:=FixedSubspace(Hgp);
-
-    gens:=Generators(Hgp);
-
     order:=H`order;
     //index:=Order(G)/order;
 
