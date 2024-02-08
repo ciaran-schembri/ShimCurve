@@ -7,6 +7,14 @@ function createHash(Gelts)
     return ret;
 end function;
 
+function createInverseHash(Gelts)
+    ret := AssociativeArray();
+    for e in Gelts do
+	ret[e`enhanced] := e`GL4;
+    end for;
+    return ret;
+end function;
+
 function getEnhancedElt(h : Hash := AssociativeArray())
     if IsEmpty(Keys(Hash)) then
 	Error("Not implemented without specifying hash table!");
@@ -23,6 +31,30 @@ function getDeterminantImage(H : Hash := AssociativeArray())
     end for;
     N := Modulus(BaseRing(H));
     return sub<GL(1,Integers(N)) | images>; 
+end function;
+
+// !!!! TODO - This is highly inefficient (p^4 inefficient) !!!! replace by something sensible
+function getKernelOfReduction(OmodN, p, inv_hash, G)
+    N := Modulus(OmodN);
+    assert(N mod (N div p) eq 0);
+    if (p eq N) then
+	return sub< G | [x : x in UnitGroup(OmodN)]>;
+    end if;
+    param := CartesianPower([0..p - 1],4);
+    ker_p := [1+(N div p)*O![y : y in TupleToList(x)] : x in param];
+    assert &and[IsUnit(y) : y in ker_p];
+    GG := Universe(Keys(inv_hash));
+    return sub<G|[inv_hash[GG!<1,x>] : x in ker_p]>;
+end function;
+
+function getAllReductionKernels(OmodN, inv_hash, G)
+    N := Modulus(OmodN);
+    ker_reds := AssociativeArray();
+    for p in PrimeDivisors(N) do
+	ker_p := getKernelOfReduction(OmodN, p, inv_hash, G);
+	ker_reds[p] := ker_p;
+    end for;
+    return ker_reds;
 end function;
 
 intrinsic GetG1plus(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G::GrpMat) -> GrpMat
@@ -43,14 +75,27 @@ intrinsic GetKernelAsSubgroup(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G1plus::
     return KG;
 end intrinsic;
 
-intrinsic EnumerateGerbiestSurjectiveH(G::GrpMat, Gelts::SeqEnum[Rec], KG::GrpMat) -> SeqEnum[Rec]
+intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, G::GrpMat, Gelts::SeqEnum[Rec], KG::GrpMat) -> SeqEnum[Rec]
 {return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
    
   subs:=Subgroups(G);
   N := Modulus(BaseRing(G));
   surjH := [H : H in subs | getDeterminantImage(H`subgroup : Hash := createHash(Gelts)) eq GL(1,Integers(N))];
-  return [H : H in surjH | KG subset H`subgroup];
+  surj_gerby_H := [H : H in surjH | KG subset H`subgroup];
+  inv_hash := createInverseHash(Gelts);
+
+  ker_reds := getAllReductionKernels(OmodN, inv_hash, G);
+  prime_kernels_in_H := [[] : H in surj_gerby_H];
+  // !!!! TODO !!! Might be more efficient to get all subgroups containing a kernel of reduction every time
+  for p in Keys(ker_reds) do
+      for i->H in surj_gerby_H do
+	  if ker_reds[p] subset H`subgroup then
+	      Append(~prime_kernels_in_H[i], p);
+	  end if;
+      end for;
+  end for;
   
+  return surj_gerby_H, prime_kernels_in_H;
 end intrinsic;
 
 intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum[Rec]
@@ -68,7 +113,10 @@ intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt
   
   KG := GetKernelAsSubgroup(O, mu, N, G1plus);
   
-  return EnumerateGerbiestSurjectiveH(G, Gelts, KG);
+  subs, prime_kernels := EnumerateGerbiestSurjectiveH(quo(O,N), G, Gelts, KG);
+  
+  // For now, we simply return the subgroups that have minimal level N
+  return [subs[i] : i in [1..#subs] | #prime_kernels[i] eq 0];
   
 end intrinsic;
 
@@ -103,6 +151,60 @@ intrinsic Genus(H::Rec, G1plus::GrpMat, KG::GrpMat, elliptic_eltsGL4::SeqEnum) -
     genus:=EnhancedGenus(sigma);
     
     return genus;
+end intrinsic;
+
+function Base26Encode(n)
+    strip := "abcdefghijklmnopqrstuvwxyz";
+    assert n gt 0;
+    x := n - 1;
+    s := "";
+    repeat
+	digit := x mod 26;
+	s cat:= strip[digit+1];
+	x div:= 26;
+    until x eq 0;
+    return Reverse(s);
+end function;
+
+intrinsic GenerateCoarsestLabels(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum[Rec], SeqEnum[MonStgElt]
+{Generate labels for subgroups H of minimal level N.}
+    subs := EnumerateGerbiestSurjectiveH(O, mu, N);
+    AutFull:=Aut(O,mu);
+    G,Gelts:=EnhancedImageGL4(AutFull,O,N);
+    G1plus := GetG1plus(O, mu, N, G);
+    KG := GetKernelAsSubgroup(O, mu, N, G1plus);
+    ells := EllipticElementsGL4(O, mu, N);
+    genera := [Genus(H, G1plus, KG, ells) : H in subs];
+    indices := [Order(G) div H`order : H in subs];
+    // !!! TODO !!! Generate here only the data, not the label. Generate the label in the end.
+    coarse_labels := [Sprintf("%o.%o.%o.%o.%o", Discriminant(O), Integers()!Norm(mu) div Discriminant(O), 
+				 N, indices[j], genera[j]) : j in [1..#indices]];
+    labels := Set(coarse_labels);
+    for label in labels do
+	label_subs := [i : i in [1..#subs] | coarse_labels[i] eq label];
+	perm_chars := [<Eltseq(PermutationCharacter(G,subs[i]`subgroup)),i> : i in label_subs];
+	perm_chars_sorted := Sort(perm_chars);
+	// perm_chars_set := Set([x[1] : x in perm_chars_sorted]);
+	n := 0;
+	idx := 0;
+	prev_char := [];
+	tiebreaker := 0;
+	while idx lt #perm_chars do 
+	    idx +:= 1;
+	    perm_char := perm_chars_sorted[idx][1];
+	    if (perm_char ne prev_char) then 
+		n +:= 1; 
+		tiebreaker := 0;
+	    else
+		tiebreaker +:= 1;
+	    end if;
+	    class := Base26Encode(n);
+	    sub_idx := perm_chars_sorted[idx][2];
+	    coarse_labels[sub_idx] cat:= Sprintf(".%o.%o", class, tiebreaker+1);
+	end while;
+    end for;
+    
+    return subs, coarse_labels;
 end intrinsic;
 
 intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,PQMtorsion:=false,verbose:=true, lowgenus:=false, write:=false) -> Any
