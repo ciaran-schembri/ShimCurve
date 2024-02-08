@@ -164,7 +164,7 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         end if;
         thetas_l := [x[1] : x in tiling_centers[l]];
         j1 := Locate(theta,thetas_l);
-        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1 mod #tiling_centers[l] eq 0) 1 else j1+1]];
+        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1 mod #tiling_centers[l] eq 0) select 1 else j1+1]];
         for x in two_possibilities do
             center := D ! x[3];
             if Distance(center,D ! z) le r_hept then
