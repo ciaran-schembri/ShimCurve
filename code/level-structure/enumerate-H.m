@@ -368,9 +368,15 @@ intrinsic WriteSubgroupsDataToFile(subs::SeqEnum[Rec])
     assert #subs gt 0;
     filename:=Sprintf("data/genera-tables/genera-D%o-deg%o-N%o.m",subs[1]`discO,subs[1]`deg_mu,subs[1]`level);
     file := Open(filename, "w");
-    fields := ["label", "order_label", "mu_label", "coarse_label", "discB", "discO", "Glabel", "nu2", "nu3", "nu4", "nu6",
-	       "genus", "fuchsian_index", "index", "torsion", "galEnd", "autmuO_norms", "is_split", "generators", "ram_data_elts"];
-    types := ["text", "text", "text", "text", "integer", "integer", "text", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer[]", "text", "integer[]", "boolean", "integer[]", "numeric[]"];
+    fields := ["label", "order_label", "mu_label", "coarse_label", "discB", "discO", "Glabel", 
+	       "nu2", "nu3", "nu4", "nu6",
+	       "genus", "fuchsian_index", "index", "torsion", "galEnd", "autmuO_norms", 
+	       "is_split", "generators", "ram_data_elts"];
+    types := ["text", "text", "text", "text", "integer", "integer", "text", 
+	      "integer", "integer", "integer", "integer", 
+	      "integer", "integer", "integer", "integer[]", "text", "integer[]", 
+	      "boolean", "integer[]", "numeric[]"];
+    assert #types eq #fields;
     
     labels_header := strJoin("?", fields) cat "\n";
     // header := "label?genus?fuchsian_index?index?torsion?galEnd?autmuO_norms?is_split?generators?ram_data_elts\n";
