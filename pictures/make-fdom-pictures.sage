@@ -63,19 +63,27 @@ def my_hyperbolic_polygon(pts, model="PD", resolution=200, circlecolor='black', 
         g = g + circle((0, 0), 1, rgbcolor=circlecolor)
     return g
 
+#Make the graphics object for D
+def level1fdom(D):
+    gp.setrand(1)
+    A = gp.alginit_Qdisc(D)
+    gp.setrand(1)
+    X = gp.afuchinit(A);
+    verts = gen_to_sage(pari(gp.afuchvertices(X, 1)));
+    g = Graphics()
+    g += my_hyperbolic_polygon(verts, add_circle = True);
+    g.axes(False)
+    g.set_axes_range(-1, 1, -1, 1)
+    return g
+
 #Make the level 1 pictures for all D in Dlist
 def make_pictures_level1(Dlist):
     for D in Dlist:
-        gp.setrand(1)
-        A = gp.alginit_Qdisc(D)
-        gp.setrand(1)
-        X = gp.afuchinit(A);
-        verts = gen_to_sage(pari(gp.afuchvertices(X, 1)));
-        g = my_hyperbolic_polygon(verts, add_circle = True);
-        pngstr = encode_mcurve_plot(g, remove_axes = True, figsize = [4, 4])
+        g = level1fdom(D)
+        pngstr = encode_mcurve_plot(g)
         fil = open(f"../data/fdompictures/{D}_1.fdom", "w")
         fil.write(f"{pngstr}")
-
+		fil.close()
 
 def possible_D(Dmin, Dmax):
     L = [];
