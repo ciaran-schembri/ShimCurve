@@ -374,7 +374,7 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	
 	s_fields := [* s`Glabel, 
 		       "F",
-		       s`autmuO_norms,
+		       writeSeqEnum(s`autmuO_norms),
 		       writeSeqEnum(bad_primes),
 		       "\\N",
 		       s`coarse_class,
