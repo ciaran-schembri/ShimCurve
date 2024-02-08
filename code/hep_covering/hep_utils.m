@@ -123,11 +123,10 @@ function LocateLayer(r,radii_minandmax);
     // return the layers closest to r
     L1 := [i : i in [1..#radii_minandmax] | radii_minandmax[i,1] lt r and r lt radii_minandmax[i,2]];
     if L1 ne [] then
-        return L1;
+        return Sort(L1);
     end if;
     L2 := Sort(Setseq(&join[{i, i+1} : i in [1..#radii_minandmax-1] | radii_minandmax[i,2] lt r and r lt radii_minandmax[i+1,1]]));
-    return L2;    
-
+    return Sort(L2);
 end function;
 
 function LocatePoint(z, tiling_centers : brute_force := false);
@@ -146,9 +145,12 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         print "Not enough layers";
         return false;
     end if;
-    //print L, #tiling_centers;
+    //print L;
+    //print [#x : x in tiling_centers];
+    Exclude(~L,1);
     output_centers := [];
     for l in L do
+        print l;
         if l gt #tiling_centers then
             print "Not enough layers";
             return false;
@@ -164,7 +166,11 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         end if;
         thetas_l := [x[1] : x in tiling_centers[l]];
         j1 := Locate(theta,thetas_l);
-        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1 mod #tiling_centers[l] eq 0) select 1 else j1+1]];
+        if j1 mod #tiling_centers[l] eq 0 then
+            two_possibilities := [tiling_centers[l,1],tiling_centers[l,#tiling_centers[l]]];
+        else
+            two_possibilities := [tiling_centers[l,j1],tiling_centers[l,j1+1]];
+        end if;
         for x in two_possibilities do
             center := D ! x[3];
             if Distance(center,D ! z) le r_hept then
