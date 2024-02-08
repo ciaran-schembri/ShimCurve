@@ -368,6 +368,11 @@ function writeSeqEnum(seq)
     return str;
 end function;
 
+function writeBoolean(b)
+    ret := b select "T" else "F";
+    return ret;
+end function;
+
 function strJoin(char, strings)
     s := "";
     for i->st in strings do
@@ -407,7 +412,7 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	gon_bounds := [1, 2*(s`genus-1)];
 	
 	s_fields := [* s`Glabel, 
-		       "False",
+		       "F",
 		       s`autmuO_norms,
 		       writeSeqEnum(bad_primes),
 		       "\\N",
@@ -432,13 +437,13 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 		       s`gerbiness,
 		       "\\N",
 		       s`index,
-		       s`is_coarse,
-		       s`is_split,
+		       writeBoolean(s`is_coarse),
+		       writeBoolean(s`is_split),
 		       s`label,
 		       "\\N",
 		       "\\N",
 		       s`level,
-		       IsSquarefree(s`level),
+		       writeBoolean(IsSquarefree(s`level)),
 		       &*PrimeDivisors(s`level),
 		       "\\N",
 		       "\\N",
@@ -470,7 +475,7 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 		       "1.1.1",
 		       "\\N",
 		       "\\N",
-		       s`torsion,
+		       writeSeqEnum(s`torsion),
 		       "\\N",
 		       "\\N" *];
 	
