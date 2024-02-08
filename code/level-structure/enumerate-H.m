@@ -366,10 +366,13 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	
 	bad_primes := PrimeDivisors(s`discO * s`level);
 	
+	// These q-bounds only hold when the bottom curve is genus 0
+	q_gon_bounds := [1, s`index];
+	
 	if (s`genus in [0,1]) then
-	    gon_bounds := [1,2];
+	    qbar_gon_bounds := [1,2];
 	else
-	    gon_bounds := [1, 2*(s`genus-1)];
+	    qbar_gon_bounds := [1, 2*(s`genus-1)];
 	end if;
 	
 	s_fields := [* s`Glabel, 
@@ -427,9 +430,9 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 		       "\\N",
 		       "\\N",
 		       "\\N",
-		       writeSeqEnum(gon_bounds),
+		       writeSeqEnum(q_gon_bounds),
 		       "\\N",
-		       writeSeqEnum(gon_bounds),
+		       writeSeqEnum(qbar_gon_bounds),
 		       writeSeqEnum(perms_readable),
 		       "\\N",
 		       "\\N",
