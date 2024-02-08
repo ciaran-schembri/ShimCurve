@@ -141,7 +141,6 @@ intrinsic sprint(X::.) -> MonStgElt
     return remove_whitespace(Sprintf("%o",X));
 end intrinsic;
 
-
 intrinsic RealVector(v::ModTupFldElt) -> ModTupFldElt
   {Given the complex vector v = v1 + I*v2 of dimension g return it as a real vector 
    (v1  v2)^T of dimension 2g}

@@ -9,6 +9,9 @@ In analogy with the H < GL_2(Z/NZ) for modular curves, there is a H which depend
 
 G plays the role of GL_2(Z/NZ), (O/N)^x is where the Galois representation lives if the surface has QM defined already and \Aut_{\pm \mu}(O) is like refined Atkin-Lehner involutions. A "PQM surface" has its Galois representatin contained in G, this is called the enhanced representation, see section 3.5 of https://arxiv.org/abs/2308.15193 for more details.
 
+Make sure you are working one directory above this repository. To load the intrinsics do
+AttachSpec("ShimCurve/spec");
+
 Types
 
 Since it is not straightforward to work with G directly in MAGMA, new 'types' have been created to support it. These are:
@@ -23,21 +26,21 @@ Since it is not straightforward to work with G directly in MAGMA, new 'types' ha
 
 Example
 ```
-> B<i,j>:=QuaternionAlgebra<RationalField() | 3, -1>;
-> O:=MaximalOrder(B);
-> BxmodQx:=QuaternionAlgebraModuloScalars(B);
-> OmodN:=quo(O,3);
-> w:=BxmodQx!(-3*j+3*i*j);
-> w^2;
+B<i,j>:=QuaternionAlgebra<RationalField() | 3, -1>;
+O:=MaximalOrder(B);
+BxmodQx:=QuaternionAlgebraModuloScalars(B);
+OmodN:=quo(O,3);
+w:=BxmodQx!(-3*j+3*i*j);
+w^2;
 18
-> w^2 eq BxmodQx!1;
+w^2 eq BxmodQx!1;
 true 18
-> Genh:=EnhancedSemidirectProduct(O: N:=3);
-> x:=OmodN!2;
-> Genh!<w,x>
-> ;
+Genh:=EnhancedSemidirectProduct(O: N:=3);
+x:=OmodN!2;
+Genh!<w,x>
+;
 <-3*j + 3*k, [2 0 0 0]>
-> Genh!<1,1> eq (Genh!<w,x>)^2;
+Genh!<1,1> eq (Genh!<w,x>)^2;
 true
 ```
 
@@ -109,33 +112,33 @@ intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatOrdElt,N::RngIntElt : minimal:=fal
 Example
 
 ```
-> B<i,j,k>:=QuaternionAlgebra< Rationals() | 3,-1 >;
-> O:=QuaternionOrder([ 1, 1/2 + 1/2*i + 1/2*j + 1/2*k, 1/2 - 1/2*i + 1/2*j - 1/2*k, 1/2 - 1/2*i - 1/2*j + 1/2*k\
+B<i,j,k>:=QuaternionAlgebra< Rationals() | 3,-1 >;
+O:=QuaternionOrder([ 1, 1/2 + 1/2*i + 1/2*j + 1/2*k, 1/2 - 1/2*i + 1/2*j - 1/2*k, 1/2 - 1/2*i - 1/2*j + 1/2*k\
  ]);
-> N:=4;
-> Ocirc:=EnhancedSemidirectProduct(O : N:=4);
-> 
-> tr,mu:=HasPolarizedElementOfDegree(O,1);
-> mu;
+N:=4;
+Ocirc:=EnhancedSemidirectProduct(O : N:=4);
+ 
+tr,mu:=HasPolarizedElementOfDegree(O,1);
+mu;
 -3*j + k
-> assert mu^2 eq -6;
-> IsTwisting(O,mu);
+assert mu^2 eq -6;
+IsTwisting(O,mu);
 true [ -3*j + k, -j + k ]
-> AutmuO:=Aut(O,mu);
-> AutmuO;
+AutmuO:=Aut(O,mu);
+AutmuO;
 Mapping from: GrpPC to Quotient by scalars of Quaternion Algebra with base ring Rational Field, defined by i^2 = 3, j^2 = -1
 <Id($), 1>
 <$.1, -3*j + k>
 <$.2, -j + k>
 <$.1 * $.2, -2*i>
-> 
-> 
-> Hgens:=[ Ocirc!< 1, [ 1, 0, 2, 0 ] >, Ocirc!< 1, [ 3, 1, 0, 1 ] >, Ocirc!< 1, [ 1, 2, 2, 0 ] >, Ocirc!< 1, [ \
+ 
+ 
+Hgens:=[ Ocirc!< 1, [ 1, 0, 2, 0 ] >, Ocirc!< 1, [ 3, 1, 0, 1 ] >, Ocirc!< 1, [ 1, 2, 2, 0 ] >, Ocirc!< 1, [ \
 3, 0, 3, 3 ] >, Ocirc!< 1, [ 3, 2, 3, 1 ] >, Ocirc!< 1, [ 3, 0, 0, 0 ] >, Ocirc!< -3*j + k, [ 2, 0, 1, 0 ] > ];
-> HgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in Hgens ];
-> HGL4:=sub< GL(4,ResidueClassRing(N)) | HgensGL4 >;
-> 
-> EnhancedElementRecord(Hgens[2]);
+HgensGL4:=[ EnhancedElementInGL4modN(g,N) : g in Hgens ];
+HGL4:=sub< GL(4,ResidueClassRing(N)) | HgensGL4 >;
+ 
+EnhancedElementRecord(Hgens[2]);
 rec<recformat<n: IntegerRing(), enhanced, GL4xGL4, GL4> | 
 enhanced := <1, [3 1 0 1]>,
 GL4xGL4 := <
@@ -153,31 +156,31 @@ GL4 := [3 1 0 1]
 [0 2 1 0]
 [0 3 2 0]
 [2 3 3 1]>
-> 
-> FixedSubspace(HGL4);
+ 
+FixedSubspace(HGL4);
 Abelian Group isomorphic to Z/2
 Defined on 1 generator in supergroup:
 $.1 = 2*$.2 + 2*$.4
 Relations:
 2*$.1 = 0
-> 
-> G:=EnhancedImageGL4(AutmuO,O,N);
-> elliptic:=EnhancedEllipticElements(O,mu);
-> elliptic; 
+
+G:=EnhancedImageGL4(AutmuO,O,N);
+elliptic:=EnhancedEllipticElements(O,mu);
+elliptic; 
 [
 <-3*j + k, [1 0 0 0]>,
 <-j + k, [ 0  0 -1  0]>,
 <-2*i, [-1  0  0  1]>
 ]
-> 
-> mon:=EnhancedRamificationData(HGL4,G,O,mu);
-> mon;
+ 
+mon:=EnhancedRamificationData(HGL4,G,O,mu);
+mon;
 [
 (1, 2)(3, 4),
 (1, 3)(2, 5)(4, 6),
 (1, 4, 6, 3, 2, 5)
 ]
-> Genus(mon);
+Genus(mon);
 0
 ```
 
@@ -188,8 +191,8 @@ Genus ? (Fuchsian) Index ? #H ? Torsion ? Gal(L|Q) ? AutmuO norms ? Split semidi
 
 To load the data type
 ```
-> list := GeneraTableToRecords(6,1,3);
-> list[50];
+list := GeneraTableToRecords(6,1,3);
+list[50];
 rec<recformat<n: IntegerRing(), genus, fuchsindex, torsioninvariants, endogroup, AutmuOnorms, Hsplit, generators, ramification_data> | 
 genus := 1,
 fuchsindex := 12,
