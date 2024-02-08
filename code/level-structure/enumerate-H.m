@@ -409,7 +409,11 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	
 	bad_primes := PrimeDivisors(s`discO * s`level);
 	
-	gon_bounds := [1, 2*(s`genus-1)];
+	if (s`genus in [0,1]) then
+	    gon_bounds := [1,2];
+	else
+	    gon_bounds := [1, 2*(s`genus-1)];
+	end if;
 	
 	s_fields := [* s`Glabel, 
 		       "F",
