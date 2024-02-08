@@ -11,6 +11,7 @@ code
       igusa-invariants.m
       LFT.m
       polarization-twisting.m
+      lehmer.m
       }
   pqm-surfaces
       {
