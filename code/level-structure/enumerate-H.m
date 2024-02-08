@@ -249,7 +249,7 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     end if;
     s`deg_mu := Integers()!Norm(mu) div Discriminant(O);
     s`mu_label := Sprintf("%o.%o", s`order_label, s`deg_mu);
-    s`coarse_label := Sprintf("%o.%o.%o.%o", s`mu_label, s`level, s`index, s`genus);
+    s`coarse_label := Sprintf("%o.%o.%o", s`level, s`index, s`genus);
     
     return s;
 end function;
@@ -279,7 +279,7 @@ procedure updateLabels(~subs, G)
 	end while;
     end for;
     for i in [1..#subs] do
-	subs[i]`label := subs[i]`coarse_label;
+	subs[i]`label := Sprintf("%o.%o", subs[i]`mu_label, subs[i]`coarse_label);
     end for;
 end procedure;
 
