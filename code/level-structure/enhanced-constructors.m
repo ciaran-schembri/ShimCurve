@@ -263,6 +263,10 @@ intrinsic Order(g::AlgQuatEnhElt) -> Any
   return "infinity";
 end intrinsic;
 
+intrinsic Norm(x::AlgQuatEnhElt) -> RngIntResElt
+{Norm of the element of the enhanced semidirect product as an element of (Z/N)^x}
+    return Norm(x`element[2]);
+end intrinsic;
 
 intrinsic PrimitiveElement(x::AlgQuatElt) -> AlgQuatProjElt
   {We consider the coset of x in B^x/Q^x: this coset has a unique representative
@@ -434,11 +438,14 @@ intrinsic IsUnit(x::AlgQuatOrdResElt) -> BoolElt
   nm:=Norm(x0);
   ZmodN:=ResidueClassRing(N);
 
-  if IsUnit(ZmodN!nm) then 
-    return true;
-  else 
-    return false;
-  end if;
+  return IsUnit(ZmodN!nm);
+end intrinsic;
+
+
+intrinsic Norm(x::AlgQuatOrdResElt) -> RngIntResElt
+{Norm of the element of the enhanced semidirect product as an element of (Z/N)^x}
+    N := Modulus(Parent(x));
+    return Integers(N)!Norm(x`element);
 end intrinsic;
 
 intrinsic Set(OmodN::AlgQuatOrdRes) -> Set 
@@ -452,27 +459,20 @@ intrinsic Set(OmodN::AlgQuatOrdRes) -> Set
   return { OmodN!piN(x) : x in set };
 end intrinsic;
 
+intrinsic Modulus(OmodN::AlgQuatOrdRes) -> RngIntElt
+{Return the level N of OmodN}
+    return OmodN`quaternionideal;
+end intrinsic;
 
 intrinsic UnitGroup(OmodN::AlgQuatOrdRes) -> GrpMat, Map
   {return (O/N)^x as a permutation group G, the second value is the isomorphism G ->(O/N)^x}
   //Need to make this much more efficient.
 
   O:=OmodN`quaternionorder;
-  N:=OmodN`quaternionideal;
-  units := { x : x in Set(OmodN) | IsUnit(x) };
-  Useq:=Setseq(units);
-
-  unitsinGL4:= [ UnitGroupToGL4modN(x`element,N) : x in Useq ];
-
-  ZmodN:=ResidueClassRing(N);
-
-  subONx:=sub< GL(4,ZmodN) | unitsinGL4 >;
-  assert #Set(subONx) eq #units;
-
-  phi:=map< subONx -> Useq | s :-> Useq[Index(unitsinGL4,s)], x :-> UnitGroupToGL4modN(x) >;
-
-
-  return subONx,phi;
+  ONgens, GL4gens := UnitGroupGens(OmodN);
+  subONx := sub< Universe(GL4gens) | GL4gens>;
+  phi := map< subONx -> OmodN | s :-> OmodN!GL4ToUnitGroup(s, O), x :-> UnitGroupToGL4modN(x) >;
+  return subONx, phi;
 end intrinsic;
 
 
