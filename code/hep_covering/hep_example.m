@@ -16,5 +16,7 @@ CC<I> := ComplexField(DD`prec);
 pi := Pi(CC);
 _ := HeptagonalCovering(Gamma, z);
 HeptagonalWhichCenter(Gamma, DD!(1/2*Exp(2*pi*I*45/110)));
+HeptagonalWhichCenter(Gamma, DD!(0.31*Exp(2*pi*I/69)));
+HeptagonalWhichCenter(Gamma, DD!(-0.309678738830485547090702735959 - 0.0141095257312187148410792542418*));
 */
 
