@@ -59,26 +59,26 @@ intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
   {Return Aut_{\pm mu}(O). It will be a map from D_n to B^x/Q^x where the codomain 
   is Aut_{\pm mu}(O)}
 
-intrinsic NormalizingElementToGL4(w::AlgQuatElt,O::AlgQuatOrd: basis:=[]) -> GrpMatElt 
-intrinsic NormalizingElementToGL4modN(w::AlgQuatElt,O::AlgQuatOrd, N::RngIntElt : basis:=[]) -> GrpMatElt 
+intrinsic NormalizingElementToGL4(w::AlgQuatElt,O::AlgQuatOrd) -> GrpMatElt 
+intrinsic NormalizingElementToGL4modN(w::AlgQuatElt,O::AlgQuatOrd, N::RngIntElt) -> GrpMatElt 
   {O is an order over R. For an element g \in N_Bx(O) the map phi_g : b |--> g^-1bg
   is R-linear hence [g] is an element of M_4(R) after fixing a basis
   this function computes [g] and also returns the R-basis of O.}
 
-intrinsic UnitGroupToGL4(x::AlgQuatOrdElt : basis:=[]) -> GrpMatElt 
-intrinsic UnitGroupToGL4modN(x::AlgQuatOrdElt,N::RngIntElt : basis:=[]) -> GrpMatElt 
+intrinsic UnitGroupToGL4(x::AlgQuatOrdElt) -> GrpMatElt 
+intrinsic UnitGroupToGL4modN(x::AlgQuatOrdElt,N::RngIntElt) -> GrpMatElt 
   {O is an order over R, this returns a matrix [lambda_g] wrt to a basis
   which is the right regular representation
   lambda_x : y --> y*x where g \in GL_1(O)}
 
-intrinsic EnhancedSemidirectInGL4(Ocirc::AlgQuatEnh : basis:=[]) -> Map 
+intrinsic EnhancedSemidirectInGL4(Ocirc::AlgQuatEnh) -> Map 
   {create the map from the semidirect product to GL4(R). R depends on the base 
   ring of Ocirc.}
 
-intrinsic EnhancedElementInGL4(g::AlgQuatEnhElt : basis:=[]) -> GrpMatElt
+intrinsic EnhancedElementInGL4(g::AlgQuatEnhElt) -> GrpMatElt
   {the enhanced element in GL4(R), R depends on the base ring of g}
 
-intrinsic EnhancedElementRecord(elt::AlgQuatEnhElt : basis:=[]) -> Any
+intrinsic EnhancedElementRecord(elt::AlgQuatEnhElt) -> Any
   {given <w,x> in Autmu(O) \rtimes (O/N)^x or Autmu(O) \rtimes O^x  return <w,x> as a 
   record along with its embedding in GL_4xGL_4 and just GL_4}
 

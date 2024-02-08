@@ -146,11 +146,9 @@ for Hrec in Subgroups(G) do
     Append(~abinvs, q/Integers()!(fixsub.i)[j]);
   end for;
   // if 4 in abinvs then 
-    print #H, Index(G,H), #(iotaOmodqx(Omodqx) meet H), #proj(H), Genus(sigma), abinvs, Sprint(sigma : oneline:=true);
+    print #H, Index(G,H), #(iotaOmodqx(Omodqx) meet H), #proj(H), Genus(sigma), abinvs, sprint(sigma);
   // end if;
 end for;
-
-*/
 
 
 /*

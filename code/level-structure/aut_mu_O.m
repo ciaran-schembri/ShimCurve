@@ -1,7 +1,6 @@
 
-intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
-  {return Autmu(O). It will be a map from a subgroup of D_n to where the codomain 
-  is Autmu(O)}
+intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Map
+  {return Autmu(O), as a map from D_n or C_n to BxmodQx (which is not a group in Magma)}
 
   assert IsScalar(mu^2);
   tr,eta:=IsScalar(mu^2);
@@ -16,18 +15,18 @@ intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
   B:=QuaternionAlgebra(O);
   BxmodQx:=QuaternionAlgebraModuloScalars(B);
 
-  if cyc eq true then  
+  if cyc then
     //sqeta,c:=SquarefreeFactorization(eta);
     assert sqeta in {-1,-3};
-    if sqeta eq -1 then 
+    if sqeta eq -1 then
       cyc_order:=4;
       zeta_n := mu/c;
-    elif sqeta eq -3 then 
+    elif sqeta eq -3 then
       cyc_order:=6;
       zeta_n := ((mu/c)+1)/2;
     end if;
     a:=B!zeta_n+1;
-  else 
+  else
     cyc_order:=2;
     a:=B!mu;
   end if;
@@ -35,10 +34,10 @@ intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
   if IsTwisting(O,mu) then
     tr,muchi:=IsTwisting(O,mu);
     b:=B!(muchi[2]);
-    if cyc eq true then 
-      Dn:=DihedralGroup(cyc_order);
-    else 
-      Dn:=Group("C2^2");
+    if cyc then
+      Dn<w_chi,w_mu>:=DihedralGroup(GrpPC, cyc_order); // FIXME: there will be another generator for D4 and D6 since magma uses prime relative orders
+    else
+      Dn<w_chi,w_mu>:=Group("C2^2");
     end if;
     Dngens:=Generators(Dn);
     assert #Dngens eq 2;
@@ -46,18 +45,19 @@ intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
     assert Order(Dn.2) eq 2;
     elts:= [ <Dn.1^l*Dn.2^k, BxmodQx!(a^l*b^k)> : l in [0..cyc_order-1], k in [0..1] ];
     grp_map:=map< Dn -> BxmodQx | elts >;
-  else 
-    if cyc eq true then 
-      Cn:=CyclicGroup(cyc_order);
-    else 
-      Cn:=CyclicGroup(2);
+  else
+    if cyc then
+      Cn<w_mu>:=CyclicGroup(GrpPC, cyc_order); // FIXME: this will be a problem for C4 and C6
+    else
+      Cn<w_mu>:=CyclicGroup(GrpPC, 2);
     end if;
     elts:= [ <Cn.1^k,BxmodQx!(a^k)> : k in [0..#Cn-1] ];
     grp_map:=map< Cn -> BxmodQx | elts >;
   end if;
-  
-  assert MapIsHomomorphism(grp_map);
-  return grp_map, [ grp_map(a) : a in Domain(grp_map) ];
+
+  image := [e[2] : e in elts];
+  assert MapIsHomomorphism(grp_map : injective:=true);
+  return grp_map, image;
 end intrinsic;
 
 
