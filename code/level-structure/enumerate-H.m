@@ -216,7 +216,7 @@ function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, Au
     s`galEnd:=GroupLabel(Domain(Ahom));
     s`autmuO_norms:=aut_mu_norms;
     s`is_split:=is_split;
-    s`generators:=Henhgens;
+    s`generators:=[<AutFull(g[1]),g[2]> : g in Henhgens];
     s`ram_data_elts:=sigma;
     s`discO := Discriminant(O);
     s`discB := Discriminant(Algebra(O));
@@ -361,7 +361,7 @@ end intrinsic;
 intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 {Write the list of subgroup records to a file, without the header}
     for s in subs do 
-        gens_readable:= [ writeSeqEnum(Eltseq(g`element[1]`element) cat Eltseq((g`element[2])`element)) : g in s`generators ];
+        gens_readable:= [ writeSeqEnum(Eltseq(g[1]`element) cat Eltseq(g[2])) : g in s`generators ];
 	perms_readable:=[ EncodePerm(p):  p in s`ram_data_elts];
 	
 	bad_primes := PrimeDivisors(s`discO * s`level);
