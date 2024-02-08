@@ -1,4 +1,11 @@
 
+// This should work for small groups
+function GroupLabel(grp)
+    assert #grp lt 1000;
+    a, b := Explode(IdentifyGroup(grp));
+    return Sprintf("%o.%o", a, b);
+end function;
+
 function createHash(Gelts)
     ret := AssociativeArray();
     for e in Gelts do
@@ -193,7 +200,8 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 order_label,
 			 mu_label,
 			 label,
-			 coarse_label
+			 coarse_label,
+			 Glabel
 		       >;
 
 function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
@@ -233,7 +241,12 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`index:=Order(G) div order;
     s`fuchsian_index:=fuchsian_index;
     s`torsion:=PrimaryAbelianInvariants(fixedspace);
-    s`galEnd:=GroupName(rho_end);
+    if #Hgp lt 1000 then
+	s`Glabel:=GroupLabel(Hgp);
+    else
+	s`Glabel:="\N";
+    end if;
+    s`galEnd:=GroupLabel(rho_end);
     s`autmuO_norms:=rho_end_norms;
     s`is_split:=is_split;
     s`generators:=Henhgens;
@@ -317,6 +330,33 @@ intrinsic GenerateDataForGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::Rng
    updateLabels(~ret_subs, G);
        
    return ret_subs;
+end intrinsic;
+
+function writeSeqEnum(seq)
+    str := "{";
+    for i->elt in seq do
+	if i gt 1 then
+	    str cat:= Sprintf(",");
+	end if;
+	str cat:= Sprintf("%o", elt);
+    end for;		 
+    str cat:= "}";
+    return str;
+end function;
+
+intrinsic WriteSubgroupsDataToFile(subs::SeqEnum[Rec])
+{}
+    assert #subs gt 0;
+    filename:=Sprintf("data/genera-tables/genera-D%o-deg%o-N%o.m",subs[1]`discO,subs[1]`deg_mu,subs[1]`level);
+    file := Open(filename, "w");
+    header := "genus?fuchsian_index?index?torsion?galEnd?autmuO_norms?is_split?generators?ram_data_elts\n";
+    fprintf file, header;
+
+    for s in subs do 
+        gens_readable:=[ writeSeqEnum(Eltseq(g`element[1]`element) cat Eltseq((g`element[2])`element)) : g in s`generators ];
+	perms_readable:=[ EncodePerm(p):  p in s`ram_data_elts];
+        fprintf file, Sprintf("%o?%o?%o?%o?%o?%o?%o?%o?%o\n", s`genus, s`fuchsian_index, s`index, s`torsion, s`galEnd, s`autmuO_norms, s`is_split, writeSeqEnum(gens_readable), writeSeqEnum(perms_readable));
+    end for;
 end intrinsic;
 
 intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,PQMtorsion:=false,verbose:=true, lowgenus:=false, write:=false) -> Any
