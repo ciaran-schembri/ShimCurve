@@ -164,7 +164,7 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         end if;
         thetas_l := [x[1] : x in tiling_centers[l]];
         j1 := Locate(theta,thetas_l);
-        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1+1) mod #tiling_centers[l]]];
+        two_possibilities := [tiling_centers[l, j1], tiling_centers[l, (j1 mod #tiling_centers[l] eq 0) 1 else j1+1]];
         for x in two_possibilities do
             center := D ! x[3];
             if Distance(center,D ! z) le r_hept then
@@ -242,19 +242,26 @@ PrintFDCovering := procedure(L, Gamma, D);
     end for;
 
     printf "\\pscircle(0,0){1}\n\\end{pspicture}\n\\end{center}\n\n\\end{document}\n";
+end procedure;
 
-    end procedure;
+/*
+PrintDomain := procedure(deltas, D);
+  printf "\\begin{center}\n\\psset{unit=2.5in}\n\\begin{pspicture}(-1,-1)(1,1)\n\\pscircle[fillstyle=solid,fillcolor=lightgray](0,0){1}\n\n";
 
+  for delta in deltas do
+    c,r := IsometricCircle(delta,D);
+    printf "\\psclip{\\pscircle(0,0){1}} \\pscircle[fillstyle=solid,fillcolor=white](%o,%o){%o} \\endpsclip\n",
+      RealField(6)!Re(c), RealField(6)!Im(c), Max(RealField(6)!r,0.001);
+  end for;
 
-QQ := Rationals();
-B<i,j,ij> := QuaternionAlgebra<QQ|-3,5>;
-O := MaximalOrder(B);
-ZK := Integers(QuadraticField(-7));
-nu := Embed(ZK,O);
-G := FuchsianGroup(B);
-_ := Group(G);
-z := FixedPoints(G!nu, UpperHalfPlane())[1];
-D := UnitDisc(:Center:=z);
+  printf "\n";
 
+  for delta in deltas do
+    c,r := IsometricCircle(delta,D);
+    printf "\\psclip{\\pscircle(0,0){1}} \\pscircle(%o,%o){%o} \\endpsclip\n",
+      RealField(6)!Re(c), RealField(6)!Im(c), Max(RealField(6)!r,0.001);
+  end for;
 
-
+  printf "\\pscircle(0,0){1}\n\\end{pspicture}\n\\end{center}\n\n\\end{document}\n";
+end procedure;
+*/

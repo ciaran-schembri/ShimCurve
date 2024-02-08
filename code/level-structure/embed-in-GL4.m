@@ -370,7 +370,7 @@ intrinsic GL4ToEnhanced(g::GrpMatElt, O::AlgQuatOrd) -> AlgQuatEnhElt
     M4R := MatrixAlgebra(R,4);
 end intrinsic;
 
-intrinsic EnhancedImageGL4(AutmuO::Map, OmodN::AlgQuatOrdRes) -> GrpMat, GrpMat, Map
+intrinsic EnhancedImageGL4(AutmuO::Map, OmodN::AlgQuatOrdRes) -> GrpMat, GrpMat, HomGrp
   {return
    - the image of the enhanced semidirect product group G in GL4(Z/NZ)
    - the image of just (O/N)^x inside GL4(Z/NZ)
@@ -425,7 +425,7 @@ intrinsic EnhancedImageGL4(AutmuO::Map, OmodN::AlgQuatOrdRes) -> GrpMat, GrpMat,
 end intrinsic;
 
 
-intrinsic EnhancedImageGL4(AutmuO::Map, O::AlgQuatOrd, N::RngIntElt) -> GrpMat
+intrinsic EnhancedImageGL4(AutmuO::Map, O::AlgQuatOrd, N::RngIntElt) -> GrpMat, GrpMat, HomGrp
   {return the image of the enhanced semidirect product group G in GL4(Z/NZ). The second return value
   is a list of enhanced elements in record format.}
 
@@ -434,7 +434,7 @@ intrinsic EnhancedImageGL4(AutmuO::Map, O::AlgQuatOrd, N::RngIntElt) -> GrpMat
 end intrinsic;
 
 
-intrinsic EnhancedImageGL4(O::AlgQuatOrd, mu::AlgQuatElt, N::RngIntElt) -> GrpMat
+intrinsic EnhancedImageGL4(O::AlgQuatOrd, mu::AlgQuatElt, N::RngIntElt) -> GrpMat, GrpMat, HomGrp
   {return the image of the enhanced semidirect product group G in GL4(Z/NZ). The second return value
   is a list of enhanced elements in record format.}
 
@@ -444,7 +444,7 @@ intrinsic EnhancedImageGL4(O::AlgQuatOrd, mu::AlgQuatElt, N::RngIntElt) -> GrpMa
   return EnhancedImageGL4(AutmuO, OmodN);
 end intrinsic;
 
-intrinsic EnhancedImageGL4(O::AlgQuatOrd, mu::AlgQuatOrdElt, N::RngIntElt) -> GrpMat
+intrinsic EnhancedImageGL4(O::AlgQuatOrd, mu::AlgQuatOrdElt, N::RngIntElt) -> GrpMat, GrpMat, HomGrp
   {return the image of the enhanced semidirect product group G in GL4(Z/NZ). The second return value
   is a list of enhanced elements in record format.}
 
