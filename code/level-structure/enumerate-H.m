@@ -201,7 +201,11 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 mu_label,
 			 label,
 			 coarse_label,
-			 Glabel
+			 Glabel,
+			 nu2,
+			 nu3,
+			 nu4,
+			 nu6
 		       >;
 
 function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
@@ -263,6 +267,12 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`deg_mu := Integers()!Norm(mu) div Discriminant(O);
     s`mu_label := Sprintf("%o.%o", s`order_label, s`deg_mu);
     s`coarse_label := Sprintf("%o.%o.%o", s`level, s`index, s`genus);
+    
+    nu := EnhancedEllipticPoints(s`ram_data_elts);
+    s`nu2 := nu[2];
+    s`nu3 := nu[3];
+    s`nu4 := nu[4];
+    s`nu6 := nu[6];
     
     return s;
 end function;
@@ -344,18 +354,41 @@ function writeSeqEnum(seq)
     return str;
 end function;
 
+function strJoin(char, strings)
+    s := "";
+    for i->st in strings do
+	if (i gt 1) then s cat:=char; end if;
+	s cat:= st;
+    end for;
+    return s;
+end function;
+
 intrinsic WriteSubgroupsDataToFile(subs::SeqEnum[Rec])
 {}
     assert #subs gt 0;
     filename:=Sprintf("data/genera-tables/genera-D%o-deg%o-N%o.m",subs[1]`discO,subs[1]`deg_mu,subs[1]`level);
     file := Open(filename, "w");
-    header := "genus?fuchsian_index?index?torsion?galEnd?autmuO_norms?is_split?generators?ram_data_elts\n";
-    fprintf file, header;
+    fields := ["label", "order_label", "mu_label", "coarse_label", "discB", "discO", "Glabel", "nu2", "nu3", "nu4", "nu6",
+	       "genus", "fuchsian_index", "index", "torsion", "galEnd", "autmuO_norms", "is_split", "generators", "ram_data_elts"];
+    types := ["text", "text", "text", "text", "integer", "integer", "text", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer[]", "text", "integer[]", "boolean", "integer[]", "numeric[]"];
+    
+    labels_header := strJoin("?", fields) cat "\n";
+    // header := "label?genus?fuchsian_index?index?torsion?galEnd?autmuO_norms?is_split?generators?ram_data_elts\n";
+    fprintf file, labels_header;
+    
+    types_header := strJoin("?", types) cat "\n\n";
+    
+    fprintf file, types_header;
 
     for s in subs do 
         gens_readable:=[ writeSeqEnum(Eltseq(g`element[1]`element) cat Eltseq((g`element[2])`element)) : g in s`generators ];
 	perms_readable:=[ EncodePerm(p):  p in s`ram_data_elts];
-        fprintf file, Sprintf("%o?%o?%o?%o?%o?%o?%o?%o?%o\n", s`genus, s`fuchsian_index, s`index, s`torsion, s`galEnd, s`autmuO_norms, s`is_split, writeSeqEnum(gens_readable), writeSeqEnum(perms_readable));
+	s_fields := [* s`label, s`order_label, s`mu_label, s`coarse_label, s`discB, s`discO, s`Glabel, s`nu2, s`nu3,
+		     s`nu4, s`nu6,
+		     s`genus, s`fuchsian_index, s`index, s`torsion, s`galEnd, s`autmuO_norms, s`is_split, 
+		     writeSeqEnum(gens_readable), writeSeqEnum(perms_readable) *];
+	assert #s_fields eq #fields;
+        fprintf file, strJoin("?", [Sprintf("%o", f) : f in s_fields]) cat "\n";
     end for;
 end intrinsic;
 
