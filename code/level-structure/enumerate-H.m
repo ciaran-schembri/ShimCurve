@@ -205,7 +205,14 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 nu2,
 			 nu3,
 			 nu4,
-			 nu6
+			 nu6,
+			 coarse_class,
+			 coarse_class_num,
+			 coarse_num,
+			 coarse_index,
+			 fine_label,
+			 gerbiness,
+			 is_coarse
 		       >;
 
 function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
@@ -243,7 +250,9 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`genus:=genus;
     s`order:=order;
     s`index:=Order(G) div order;
+    s`coarse_index := s`index;
     s`fuchsian_index:=fuchsian_index;
+    s`gerbiness:=#KG;
     s`torsion:=PrimaryAbelianInvariants(fixedspace);
     if #Hgp lt 1000 then
 	s`Glabel:=GroupLabel(Hgp);
@@ -267,6 +276,8 @@ function createRecord(H, G1plus, KG, ells, Gelts, O, N, OmodN, G, mu, level)
     s`deg_mu := Integers()!Norm(mu) div Discriminant(O);
     s`mu_label := Sprintf("%o.%o", s`order_label, s`deg_mu);
     s`coarse_label := Sprintf("%o.%o.%o", s`level, s`index, s`genus);
+    s`fine_label := s`coarse_label;
+    s`is_coarse := true;
     
     nu := EnhancedEllipticPoints(s`ram_data_elts);
     s`nu2 := nu[2];
@@ -299,6 +310,9 @@ procedure updateLabels(~subs, G)
 	    class := Base26Encode(n);
 	    sub_idx := perm_chars_sorted[idx][2];
 	    subs[sub_idx]`coarse_label cat:= Sprintf(".%o.%o", class, tiebreaker+1);
+	    subs[sub_idx]`coarse_class_num := n;
+	    subs[sub_idx]`coarse_class := class;
+	    subs[sub_idx]`coarse_num := tiebreaker+1;
 	end while;
     end for;
     for i in [1..#subs] do
@@ -363,39 +377,117 @@ function strJoin(char, strings)
     return s;
 end function;
 
-intrinsic WriteSubgroupsDataToFile(subs::SeqEnum[Rec])
-{}
-    assert #subs gt 0;
-    filename:=Sprintf("data/genera-tables/genera-D%o-deg%o-N%o.m",subs[1]`discO,subs[1]`deg_mu,subs[1]`level);
-    file := Open(filename, "w");
-    fields := ["label", "order_label", "mu_label", "coarse_label", "discB", "discO", "Glabel", 
-	       "nu2", "nu3", "nu4", "nu6",
-	       "genus", "fuchsian_index", "index", "torsion", "galEnd", "autmuO_norms", 
-	       "is_split", "generators", "ram_data_elts"];
-    types := ["text", "text", "text", "text", "integer", "integer", "text", 
-	      "integer", "integer", "integer", "integer", 
-	      "integer", "integer", "integer", "integer[]", "text", "integer[]", 
-	      "boolean", "integer[]", "numeric[]"];
+intrinsic WriteHeaderToFile(file::IO)
+{Write the header to a file.}
+    fields := ["Glabel", "all_degree1_points_known", "autmuO_norms", "bad_primes", "cm_discriminants", "coarse_class", "coarse_class_num", "coarse_index", "coarse_label", "coarse_num", "conductor", "curve_label", "deg_mu", "dims", "discB", "discO", "fine_label", "fine_num", "fuchsian_index", "galEnd", "generators", "genus", "genus_minus_rank", "gerbiness", "has_obstruction", "index", "is_coarse", "is_split", "label", "lattice_labels", "lattice_x", "level", "level_is_squarefree", "level_radical", "log_conductor", "models", "mu_label", "mults", "name", "newforms", "nu2", "nu3", "nu4", "nu6", "num_bad_primes", "num_known_degree1_noncm_points", "num_known_degree1_points", "obstructions", "order_label", "parents", "parents_conj", "pointless", "power", "psl2label", "q_gonality", "q_gonality_bounds", "qbar_gonality", "qbar_gonality_bounds", "ram_data_elts", "rank", "reductions", "scalar_label", "simple", "squarefree", "torsion", "trace_hash", "traces"];
+
+    types := ["text", "boolean", "integer[]", "integer[]", "integer[]", "text", "integer", "integer", "text", "integer", "integer[]", "text", "integer", "integer[]", "integer", "integer", "text", "integer", "integer", "text", "integer[]", "integer", "integer", "integer", "smallint", "integer", "boolean", "boolean", "text", "text[]", "integer[]", "integer", "boolean", "integer", "numeric", "smallint", "text", "integer[]", "text", "text[]", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer[]", "text", "text[]", "integer[]", "boolean", "boolean", "text", "integer", "integer[]", "integer", "integer[]", "numeric[]", "integer", "text[]", "text", "boolean", "boolean", "integer[]", "bigint", "integer[]"];
+    
     assert #types eq #fields;
     
     labels_header := strJoin("?", fields) cat "\n";
-    // header := "label?genus?fuchsian_index?index?torsion?galEnd?autmuO_norms?is_split?generators?ram_data_elts\n";
+    
     fprintf file, labels_header;
     
     types_header := strJoin("?", types) cat "\n\n";
     
     fprintf file, types_header;
+    
+    return;
+end intrinsic;
 
+intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
+{Write the list of subgroup records to a file, without the header}
     for s in subs do 
-        gens_readable:=[ writeSeqEnum(Eltseq(g`element[1]`element) cat Eltseq((g`element[2])`element)) : g in s`generators ];
+        gens_readable:= [ writeSeqEnum(Eltseq(g`element[1]`element) cat Eltseq((g`element[2])`element)) : g in s`generators ];
 	perms_readable:=[ EncodePerm(p):  p in s`ram_data_elts];
-	s_fields := [* s`label, s`order_label, s`mu_label, s`coarse_label, s`discB, s`discO, s`Glabel, s`nu2, s`nu3,
-		     s`nu4, s`nu6,
-		     s`genus, s`fuchsian_index, s`index, s`torsion, s`galEnd, s`autmuO_norms, s`is_split, 
-		     writeSeqEnum(gens_readable), writeSeqEnum(perms_readable) *];
-	assert #s_fields eq #fields;
+	
+	bad_primes := PrimeDivisors(s`discO * s`level);
+	
+	gon_bounds := [1, 2*(s`genus-1)];
+	
+	s_fields := [* s`Glabel, 
+		       "False",
+		       s`autmuO_norms,
+		       writeSeqEnum(bad_primes),
+		       "\\N",
+		       s`coarse_class,
+		       s`coarse_class_num,
+		       s`coarse_index,
+		       s`coarse_label,
+		       s`coarse_num,
+		       "\\N",
+		       "\\N",
+		       s`deg_mu,
+		       "\\N",
+		       s`discB,
+		       s`discO,
+		       s`fine_label,
+		       "\\N",
+		       s`fuchsian_index,
+		       s`galEnd,
+		       writeSeqEnum(gens_readable),
+		       s`genus,
+		       "\\N",
+		       s`gerbiness,
+		       "\\N",
+		       s`index,
+		       s`is_coarse,
+		       s`is_split,
+		       s`label,
+		       "\\N",
+		       "\\N",
+		       s`level,
+		       IsSquarefree(s`level),
+		       &*PrimeDivisors(s`level),
+		       "\\N",
+		       "\\N",
+		       s`mu_label,
+		       "\\N",
+		       "\\N",
+		       "{}",
+		       s`nu2,
+		       s`nu3,
+		       s`nu4,
+		       s`nu6,
+		       #bad_primes,
+		       "\\N",
+		       "\\N",
+		       "\\N",
+		       s`order_label,
+		       "{}",
+		       "\\N",
+		       "\\N",
+		       "\\N",
+		       "\\N",
+		       "\\N",
+		       writeSeqEnum(gon_bounds),
+		       "\\N",
+		       writeSeqEnum(gon_bounds),
+		       writeSeqEnum(perms_readable),
+		       "\\N",
+		       "\\N",
+		       "1.1.1",
+		       "\\N",
+		       "\\N",
+		       s`torsion,
+		       "\\N",
+		       "\\N" *];
+	
+	assert #s_fields eq 67;
         fprintf file, strJoin("?", [Sprintf("%o", f) : f in s_fields]) cat "\n";
     end for;
+    return;
+end intrinsic;
+
+intrinsic WriteHeaderAndSubgroupsDataToFile(subs::SeqEnum[Rec])
+{Write the list of subgroup records to a file, together with the header.}
+    assert #subs gt 0;
+    filename:=Sprintf("data/genera-tables/genera-D%o-deg%o-N%o.m",subs[1]`discO,subs[1]`deg_mu,subs[1]`level);
+    file := Open(filename, "w");
+    WriteHeaderToFile(file);
+    WriteSubgroupsDataToFile(file, subs);
+    return;
 end intrinsic;
 
 intrinsic EnumerateH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : minimal:=false,PQMtorsion:=false,verbose:=true, lowgenus:=false, write:=false) -> Any
