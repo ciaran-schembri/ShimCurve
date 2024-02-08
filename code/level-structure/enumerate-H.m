@@ -142,55 +142,6 @@ function Base26Encode(n)
     return Reverse(s);
 end function;
 
-intrinsic GenerateCoarsestLabels(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> SeqEnum[Rec], SeqEnum[MonStgElt]
-{Generate labels for subgroups H of minimal level N.}
-   // We deal with the N <= 2 case by moving to higher levels
-   N_orig := N;
-   if N le 2 then
-       N := 3*N;
-       prime_kernel := [3];
-    else
-       prime_kernel := [];
-    end if;
-    subs := EnumerateGerbiestSurjectiveH(O, mu, N : prime_kernel := prime_kernel);
-    AutFull:=Aut(O,mu);
-    G,Gelts:=EnhancedImageGL4(AutFull,O,N);
-    G1plus := GetG1plus(O, mu, N, G);
-    KG := GetKernelAsSubgroup(O, mu, N, G1plus);
-    ells := EllipticElementsGL4(O, mu, N);
-    genera := [Genus(H, G1plus, KG, ells) : H in subs];
-    indices := [Order(G) div H`order : H in subs];
-    // !!! TODO !!! Generate here only the data, not the label. Generate the label in the end.
-    coarse_labels := [Sprintf("%o.%o.%o.%o.%o", Discriminant(O), Integers()!Norm(mu) div Discriminant(O), 
-				 N_orig, indices[j], genera[j]) : j in [1..#indices]];
-    labels := Set(coarse_labels);
-    for label in labels do
-	label_subs := [i : i in [1..#subs] | coarse_labels[i] eq label];
-	perm_chars := [<Eltseq(PermutationCharacter(G,subs[i]`subgroup)),i> : i in label_subs];
-	perm_chars_sorted := Sort(perm_chars);
-	// perm_chars_set := Set([x[1] : x in perm_chars_sorted]);
-	n := 0;
-	idx := 0;
-	prev_char := [];
-	tiebreaker := 0;
-	while idx lt #perm_chars do 
-	    idx +:= 1;
-	    perm_char := perm_chars_sorted[idx][1];
-	    if (perm_char ne prev_char) then 
-		n +:= 1; 
-		tiebreaker := 0;
-	    else
-		tiebreaker +:= 1;
-	    end if;
-	    class := Base26Encode(n);
-	    sub_idx := perm_chars_sorted[idx][2];
-	    coarse_labels[sub_idx] cat:= Sprintf(".%o.%o", class, tiebreaker+1);
-	end while;
-    end for;
-    
-    return subs, coarse_labels;
-end intrinsic;
-
 intrinsic GetH1plusquo(H::GrpMat[RngIntRes], G1plus::GrpMat[RngIntRes], KG::GrpMat[RngIntRes], G1plusmodKG::GrpPerm, Gmap::Map[GrpMat[RngIntRes], GrpPerm]) -> GrpPerm
 {}
     H1plus := sub< G1plus | H meet G1plus >;
@@ -326,6 +277,9 @@ procedure updateLabels(~subs, G)
 	    sub_idx := perm_chars_sorted[idx][2];
 	    subs[sub_idx]`coarse_label cat:= Sprintf(".%o.%o", class, tiebreaker+1);
 	end while;
+    end for;
+    for i in [1..#subs] do
+	subs[i]`label := subs[i]`coarse_label;
     end for;
 end procedure;
 
