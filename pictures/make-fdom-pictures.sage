@@ -83,7 +83,7 @@ def make_pictures_level1(Dlist):
         pngstr = encode_mcurve_plot(g)
         fil = open(f"../data/fdompictures/{D}_1.fdom", "w")
         fil.write(f"{pngstr}")
-		fil.close()
+        fil.close()
 
 def possible_D(Dmin, Dmax):
     L = [];
