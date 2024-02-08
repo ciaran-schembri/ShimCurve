@@ -74,15 +74,15 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   skew_commute_basis:=[ &+[ Eltseq(skew_commuters_gens[j])[i]*basisO[i] : i in [1..4] ] : j in [1..2] ];
   assert forall(e){ b : b in skew_commute_basis | mu^-1*b*mu eq -b };
 
-  a:=Integers()!Norm(skew_commute_basis[1]);
-  b:=Integers()!Trace(skew_commute_basis[1]*skew_commute_basis[2]);
-  c:=Integers()!Norm(skew_commute_basis[2]);
+  a:=-Integers()!Norm(skew_commute_basis[1]);
+  b:=-Integers()!Trace(skew_commute_basis[1]*skew_commute_basis[2]);
+  c:=-Integers()!Norm(skew_commute_basis[2]);
   Dform:=b^2-4*a*c;
   assert Dform lt 0;
   Q:=QuadraticForms(Dform);
   q := Q![a,b,c];
   L:=Lattice(q);
-  [ Norm(b) : b in skew_commute_basis ];
+  /*[ Norm(b) : b in skew_commute_basis ];
   solns:=ShortVectors(L,10);
   for soln in solns do 
     if IsDivisibleBy(disc,soln[2]);
@@ -91,6 +91,7 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
       assert IsDivisibleBy(disc,Norm(chi));
 
   [ [Norm(a*skew_commute_basis[1] + b*skew_commute_basis[2]),a,b] : a,b in [-2..2] ];
+  */
   //First we find twisting elements for an isomorphic quaternion algebra to B given by 
   //Bram<i,j> = (-D*del,m | Q). Then we find an isomorphism phi: Bram -> B. Otwisted_basis 
   // is the phi(Basis(MaximalOrder(Bram))). This defines an order of B and phi(i), phi(j) 
