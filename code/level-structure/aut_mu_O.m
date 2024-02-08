@@ -1,6 +1,6 @@
 
 intrinsic Aut(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
-  {return Autmu(O). It will be a map from D_n to  where the codomain 
+  {return Autmu(O). It will be a map from a subgroup of D_n to where the codomain 
   is Autmu(O)}
 
   assert IsScalar(mu^2);
