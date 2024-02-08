@@ -38,13 +38,17 @@ intrinsic PrepPictureDataH(O::AlgQuatOrd, Henhgens :: Tup) -> RngIntElt
 end intrinsic;
 
 //Does PrepPictureDataH for the full group H, i.e. the largest Atkin-Lehner quotient that we will consider.
-intrinsic PrepPictureDataMaximalH(O::AlgQuatOrd, mu::AlgQuatElt, N::RngIntElt) -> RngIntElt
+intrinsic PrepPictureDataMaximalH(O::AlgQuatOrd, mu::AlgQuatElt) -> RngIntElt
   {Saves the data to the data to a file, to be read by PARI/GP to compute the fundamental domain, for the maximal group H.}
   AutmuO := Aut(O, mu);
-  G, Gelts := EnhancedImageGL4(AutmuO, O, N);
+  G, Gelts := EnhancedImageGL4(AutmuO, O, 1);
   Genh := [ g`enhanced : g in Gelts];
   GGL4gens := Generators(G);
   Genhgens := < g`enhanced : g in Gelts | g`GL4 in GGL4gens >;
   return PrepPictureDataH(O, Genhgens);
 end intrinsic;
+
+
+
+
 

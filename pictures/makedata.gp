@@ -1,6 +1,6 @@
 
 /*Processes the vertices from the file algdat.dat*/
-processvertices_fromfile() = {
+loadcurvefromfile() = {
   my(v);
   v = readvec("algdat.dat");
   return(processvertices(v[1], v[2], v[3]));
@@ -13,10 +13,10 @@ ab: pair [a, b]
 Obasis: vector of basis elements of the (maximal) order O where each element is of the form [e, f, g, h] representing a basis element of e+fi+gj+hk (maximal order)
 norms: vector of the norms of elements of Aut_{+/- mu}(O). Must be a set of positive integers that are divisors of D = discriminant of A.
 
-Output: vertices of the fundamental domain 
+Output: fundamental domain for the correct Shimura curve.
 */
 
-processvertices(ab, Obasis, norms) = {
+processdomain(ab, Obasis, norms) = {
   my(F, A, Or, X, alnorms, mat);
   F = nfinit(y);
   A = alginit(F, ab);
@@ -31,7 +31,7 @@ processvertices(ab, Obasis, norms) = {
     );
   );
   X = afuchnewtype(X, mat);
-  return(afuchvertices(X, 1));
+  return(X);
 }
 
 
