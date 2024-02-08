@@ -434,11 +434,7 @@ intrinsic IsUnit(x::AlgQuatOrdResElt) -> BoolElt
   nm:=Norm(x0);
   ZmodN:=ResidueClassRing(N);
 
-  if IsUnit(ZmodN!nm) then 
-    return true;
-  else 
-    return false;
-  end if;
+  return IsUnit(ZmodN!nm);
 end intrinsic;
 
 intrinsic Set(OmodN::AlgQuatOrdRes) -> Set 
@@ -458,21 +454,10 @@ intrinsic UnitGroup(OmodN::AlgQuatOrdRes) -> GrpMat, Map
   //Need to make this much more efficient.
 
   O:=OmodN`quaternionorder;
-  N:=OmodN`quaternionideal;
-  units := { x : x in Set(OmodN) | IsUnit(x) };
-  Useq:=Setseq(units);
-
-  unitsinGL4:= [ UnitGroupToGL4modN(x`element,N) : x in Useq ];
-
-  ZmodN:=ResidueClassRing(N);
-
-  subONx:=sub< GL(4,ZmodN) | unitsinGL4 >;
-  assert #Set(subONx) eq #units;
-
-  phi:=map< subONx -> Useq | s :-> Useq[Index(unitsinGL4,s)], x :-> UnitGroupToGL4modN(x) >;
-
-
-  return subONx,phi;
+  ONgens, GL4gens := UnitGroupGens(OmodN);
+  subONx := sub< Universe(GL4gens) | GL4gens>;
+  phi := map< subONx -> OmodN | s :-> OmodN!GL4ToUnitGroup(s, O), x :-> UnitGroupToGL4modN(x) >;
+  return subONx, phi;
 end intrinsic;
 
 

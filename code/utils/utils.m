@@ -130,29 +130,16 @@ intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunF
   return phi_sqfree, c/d;
 end intrinsic;
 
-
-intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt 
-  {Sprint the sequence seq, if oneline is true then return it as a one-line string.}
-  if oneline eq false then 
-    return Sprint(seq);
-  else 
-    if Type(seq[1]) eq GrpPermElt then 
-      degree:=Degree(Parent(seq[1]));
-      elts:=Sprintf("[ Sym(%o) |",degree) cat (&cat[ Sprintf(" %o,",elt) : elt in seq ]);
-      elts:=ReplaceAll(elts,"Id($)",Sprintf("Id(Sym(%o))",degree));
-    else 
-      elts:="[" cat (&cat[ Sprintf(" %o,",elt) : elt in seq ]);
-    end if;
-
-    Prune(~elts);
-    elts:=elts cat " ]";
-    ev:=eval(elts);
-    assert ev eq seq;
-    return elts;
-  end if;
+intrinsic remove_whitespace(X::MonStgElt) -> MonStgElt
+{ Strips spaces and carraige returns from string; much faster than StripWhiteSpace. }
+    return Join(Split(Join(Split(X," "),""),"\n"),"");
 end intrinsic;
 
-
+intrinsic sprint(X::.) -> MonStgElt
+{ Sprints object X with spaces and carraige returns stripped. }
+    if Type(X) eq Assoc then return Join(Sort([ $$(k) cat "=" cat $$(X[k]) : k in Keys(X)]),":"); end if;
+    return remove_whitespace(Sprintf("%o",X));
+end intrinsic;
 
 
 intrinsic RealVector(v::ModTupFldElt) -> ModTupFldElt
@@ -255,20 +242,16 @@ intrinsic MapIsHomomorphism(AutmuO::. : injective:=true) -> BoolElt
 end intrinsic 
 
 
-
-
-
-intrinsic FixedSubspace(H::GrpMat) -> GrpAb 
-  {}
-  N:=#BaseRing(H);
-  ZmodN:=ResidueClassRing(N);
-  ZmodN4:= [ Matrix(ZmodN,1,4,[a,b,c,d]) : a,b,c,d in ZmodN ];
-  fixed_vectors:= [ v : v in ZmodN4 | forall(u){ g : g in H | v*g eq v } ];
-  A:=AbelianGroup([N,N,N,N]);
-  elts:=[ Eltseq(v) : v in fixed_vectors ];
-  fixedtors:=sub<A | elts >; 
-  //fixedsub:=sub< AbelianGroup([N,N,N,N]) | 
-  return fixedtors; //PrimaryAbelianInvariants(fixedsub);
+intrinsic FixedSubspace(H::GrpMat) -> GrpAb
+{}
+  N := #BaseRing(H);
+  M4R := MatrixAlgebra(Integers(N), 4);
+  Hgens := [H.i : i in [1..NumberOfGenerators(H)]];
+  A := AbelianGroup([N,N,N,N]);
+  if #Hgens eq 0 then
+    return A;
+  end if;
+  V := &meet[Kernel(M4R!h-1) : h in Hgens];
+  // Need to convert to abelian group
+  return sub<A | [Eltseq(v) : v in Generators(V)]>;
 end intrinsic;
-
-

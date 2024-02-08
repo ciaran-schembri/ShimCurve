@@ -71,7 +71,7 @@ intrinsic SemidirectToNormalizerKernel(O::AlgQuatOrd,mu::AlgQuatOrdElt) -> SeqEn
   It is necessarily cyclic and the second value is the generator of the group}
   B:=QuaternionAlgebra(O);
   Ocirc:=EnhancedSemidirectProduct(O);
-  AutFull,autmuOseq:=Aut(O,mu);
+  AutFull, autmuOseq := Aut(O,mu);
   Oxcyc:= [ (1/Integers()!Sqrt(Norm(a`element)))*a`element : a in autmuOseq | IsSquare(Norm(a`element)) ];
   ker:=[ Ocirc!<x,x^-1> : x in Oxcyc ];
   assert #ker in [1,2,3];
