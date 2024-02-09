@@ -240,6 +240,37 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
 end intrinsic;
 
+intrinsic numberofheptagons(N);
+{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
+maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
+a imaginary quadratic subring with fundamental discriminant -d < -4.
+returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z.}
+    B<i,j,ij> := QuaternionAlgebra(N);
+    O := MaximalOrder(B);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    _ := Group(G);
+    heptcoverindices := HeptagonalCovering(G,z);
+    return #heptcoverindices;
+end function;
+
+
 PrintFDCovering := procedure(L, Gamma, D);
 // L: List of tuples <center, radius>
     printf "\\begin{center}\n\\psset{unit=2.5in}\n\\begin{pspicture}(-1,-1)(1,1)\n\\pscircle[fillstyle=solid,fillcolor=lightgray](0,0){1}\n\n";
