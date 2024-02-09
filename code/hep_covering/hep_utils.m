@@ -105,9 +105,25 @@ intrinsic HeptagonalCovering(Gamma::GrpPSL2, z::SpcHypElt) -> SeqEnum[RngIntElt]
     N := Ceiling(fd_radius/r_hept);
     Gamma`LayeredHeptCover := HeptTilingTable(N);
     centers := &cat Gamma`LayeredHeptCover;
-    Gamma`HeptCoverCenters := centers;
 
-    return [1..#centers];
+    O := BaseRing(Gamma);
+    B := Algebra(O);
+    gammagens := Gamma`ShimFDSidepairsDomain;
+    prunecenters := [centers[1]];
+    indices := [];
+    for i := 2 to #centers do
+        c := centers[i][3];
+        euc_circle := HyperbolicToEuclideanCircle(c,r_hept);
+        euc_radius := euc_circle[2];
+        boundary_pt := D!(c-euc_radius/AbsoluteValue(c)*c);
+        gg := HistoricShimuraReduceUnit(O!1, gammagens, Gamma, D : z0 := boundary_pt);
+        if gg[1][1] eq O!1 then
+            Append(~indices,i);
+            Append(~prunecenters,centers[i]);
+        end if;
+    end for;
+    Gamma`HeptCoverCenters := prunecenters;
+    return indices;
 end intrinsic;
 
 
@@ -169,11 +185,11 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         else
             two_possibilities := [tiling_centers[l,j1],tiling_centers[l,j1+1]];
         end if;
-        print two_possibilities;
+//        print two_possibilities;
         for x in two_possibilities do
             center := D ! x[3];
             dist := Distance(center,D ! z);
-            print dist, r_hept;
+//            print dist, r_hept;
             if dist le r_hept then
                 Append(~output_centers, x);
             end if;
