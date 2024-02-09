@@ -17,6 +17,7 @@ pt1, pt2, pt3 := InitVertex(2,3,7); //pt3 is mapped to the origin
 D := UnitDisc(:Center:=pt3);
 zeropt := D!0;
 r_hept := Distance(D!MapToUnitDisc(pt1,pt3), zeropt);
+print r_hept;
 
 ///////////////////////////////////////////////////////////////
 
@@ -45,7 +46,9 @@ HeptagonalWhichCenter(G, DD!(-0.655492752372111787627614081399 - 0.4378182119254
 
 /*
 // to print fundamental domain with heptagonal covering
-L1 := [x[3] : G`HeptCoverCenters];
+SetColumns(0);
+L1 := [x[3] : x in G`HeptCoverCenters];
 L2 := HyperbolicToEuclideanCircle(L1,r_hept);
-PrintFDCovering(L,G,DD);
+// Copy Procedure PrintFDCovering from hep_utils.m
+PrintFDCovering(L2,G,DD);
 */
