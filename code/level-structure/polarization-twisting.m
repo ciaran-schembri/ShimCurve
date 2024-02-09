@@ -43,7 +43,7 @@ end intrinsic;
 intrinsic DegreeOfPolarizedElement(O::AlgQuatOrd,mu:AlgQuatOrdElt) -> RngIntElt
   {degree of mu}
   tr,nmu:= IsScalar(mu^2);
-  assert IsSquarefree(Integers()!nmu);
+  //assert IsSquarefree(Integers()!nmu);
   disc:=Discriminant(O);
   del:=SquarefreeFactorization(-nmu/disc);
   assert IsCoercible(Integers(),del);
@@ -59,7 +59,7 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   assert IsMaximal(O);
   Rx<x>:=PolynomialRing(Rationals());
   tr,nmu:= IsScalar(mu^2);
-  assert IsSquarefree(Integers()!nmu);
+  //assert IsSquarefree(Integers()!nmu);
   disc:=Discriminant(O);
   del:=DegreeOfPolarizedElement(O,mu);
   B:=QuaternionAlgebra(O);
@@ -74,14 +74,47 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   skew_commute_basis:=[ &+[ Eltseq(skew_commuters_gens[j])[i]*basisO[i] : i in [1..4] ] : j in [1..2] ];
   assert forall(e){ b : b in skew_commute_basis | mu^-1*b*mu eq -b };
 
-  a:=Integers()!Norm(skew_commute_basis[1]);
-  b:=Integers()!Trace(skew_commute_basis[1]*skew_commute_basis[2]);
-  c:=Integers()!Norm(skew_commute_basis[2]);
+  a:=-Integers()!Norm(skew_commute_basis[1]);
+  b:=-Integers()!Trace(skew_commute_basis[1]*Conjugate(skew_commute_basis[2]));
+  c:=-Integers()!Norm(skew_commute_basis[2]);
   Dform:=b^2-4*a*c;
-  Q:=QuadraticForm(Dform);
+  assert Dform lt 0;
+  Q:=QuadraticForms(Dform);
   q := Q![a,b,c];
-  [ Norm(b) : b in skew_commute_basis ];
+  L:=Lattice(q);
+  
+  solns:=ShortVectors(L,disc);
+  if #solns eq 0 then 
+    return false, [mu];
+  end if;
 
+  for soln in solns do 
+    if IsDivisibleBy(disc,soln[2]) then
+      x,y:=Explode(Eltseq(soln[1]));
+      chi:=x*skew_commute_basis[1] + y*skew_commute_basis[2];
+      assert IsDivisibleBy(disc,Norm(chi));
+      assert chi in O;
+      assert mu*chi eq -chi*mu;
+      return true, [mu,chi];
+    end if;
+  end for;
+
+  return false;
+
+
+
+  /*flag:=false;
+  while flag eq false do 
+    if IsDivisibleBy(disc,Norm(a*skew_commute_basis[1] + b*skew_commute_basis[2])) then 
+      soln:=[a,b];
+      flag:=true;
+    end if;
+  end while;*/
+  
+
+
+  //[ [Norm(a*skew_commute_basis[1] + b*skew_commute_basis[2]),a,b] : a,b in [-2..2] ];
+  
   //First we find twisting elements for an isomorphic quaternion algebra to B given by 
   //Bram<i,j> = (-D*del,m | Q). Then we find an isomorphism phi: Bram -> B. Otwisted_basis 
   // is the phi(Basis(MaximalOrder(Bram))). This defines an order of B and phi(i), phi(j) 
@@ -90,6 +123,7 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   //and map the twisting elements to get mu and chi and O. We should find that this mu is 
   //plus or minus the original mu.  
 
+  /*
   Bdisc:=QuaternionAlgebra(Discriminant(B));
   Odisc:=MaximalOrder(Bdisc);
   for m in ram do
@@ -119,6 +153,7 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   gammaQ:=B!Eltseq(ChangeRing(gamma,Rationals()));
 
   Omuchi:=[ (gammaQ^(-1))*x*gammaQ : x in Otwisted_muchi ];
+  */
 
   /*Omuchi := [];
   for x in Otwisted_muchi do
@@ -136,13 +171,7 @@ intrinsic IsTwisting(O::AlgQuatOrd,mu::AlgQuatElt) -> BoolElt
   //Omuchi := [ B!Eltseq(ChangeRing(Bnumfld!x,Rationals())) : x in Omuchi_numfld ];
 
   //make sure its twisting
-  assert Omuchi[1]*Omuchi[2] eq -Omuchi[2]*Omuchi[1];
-  assert Omuchi[1] eq mu or Omuchi[1] eq -mu;
-  assert Omuchi[1] in O;
-  assert Omuchi[2] in O;
-  assert IsDivisibleBy(disc,Integers()!Norm(Omuchi[2]));
 
-  return true, [mu,Omuchi[2]];
 
 end intrinsic;
 

@@ -105,9 +105,25 @@ intrinsic HeptagonalCovering(Gamma::GrpPSL2, z::SpcHypElt) -> SeqEnum[RngIntElt]
     N := Ceiling(fd_radius/r_hept);
     Gamma`LayeredHeptCover := HeptTilingTable(N);
     centers := &cat Gamma`LayeredHeptCover;
-    Gamma`HeptCoverCenters := centers;
 
-    return [1..#centers];
+    O := BaseRing(Gamma);
+    B := Algebra(O);
+    gammagens := Gamma`ShimFDSidepairsDomain;
+    prunecenters := [centers[1]];
+    indices := [1];
+    for i := 2 to #centers do
+        c := centers[i][3];
+        euc_circle := HyperbolicToEuclideanCircle(c,r_hept);
+        euc_radius := euc_circle[2];
+        boundary_pt := D!(c-euc_radius/AbsoluteValue(c)*c);
+        gg := HistoricShimuraReduceUnit(O!1, gammagens, Gamma, D : z0 := boundary_pt);
+        if gg[1][1] eq O!1 then
+            Append(~indices,i);
+            Append(~prunecenters,centers[i]);
+        end if;
+    end for;
+    Gamma`HeptCoverCenters := prunecenters;
+    return indices;
 end intrinsic;
 
 
@@ -169,11 +185,11 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         else
             two_possibilities := [tiling_centers[l,j1],tiling_centers[l,j1+1]];
         end if;
-        print two_possibilities;
+//        print two_possibilities;
         for x in two_possibilities do
             center := D ! x[3];
             dist := Distance(center,D ! z);
-            print dist, r_hept;
+//            print dist, r_hept;
             if dist le r_hept then
                 Append(~output_centers, x);
             end if;
@@ -222,6 +238,100 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     hyperbolic unit disc with hyperbolic center given by ws and fixed hyperbolic radius r.
     Uses Eq 33.7.5 from John Voight - Quaternion Algebras}
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
+end intrinsic;
+
+intrinsic NumberOfHeptagonsInCover(O :: AlgQuatOrd) -> RngIntElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    _ := Group(G);
+    heptcoverindices := HeptagonalCovering(G,z);
+    return #heptcoverindices, -d;
+end intrinsic;
+
+intrinsic AreaRatio(O :: AlgQuatOrd) -> FldReElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+
+    RR := RealField();
+    A := ArithmeticVolume(fd)*2*Pi(RR);
+    a := (1-1/2-1/3-1/7)*2*Pi(RR)*7;
+    return A/a, -d;
+end intrinsic;
+
+intrinsic AreaRatio_SingleDisc(O :: AlgQuatOrd) -> FldReElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns the ratio of the area of a single disc centered at 0 covering the fundamental domain of G centered at z
+wrt the area of fundamental domain, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    rho := Maximum([Distance(DD!0,DD!x) : x in fd]);
+
+    RR := RealField();
+    A := ArithmeticVolume(fd)*2*Pi(RR);
+    a := 4*Pi(RR)*Sinh(rho/2)^2;
+
+    return a/A, -d;
 end intrinsic;
 
 PrintFDCovering := procedure(L, Gamma, D);

@@ -55,7 +55,7 @@ intrinsic GetKernelAsSubgroup(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt,G1plus::
     return KG;
 end intrinsic;
 
-intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, AutFull::Map, G::GrpMat, ONx::GrpMat, Ahom::HomGrp, KG::GrpMat) -> SeqEnum[Rec]
+intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, AutFull::Map, G::GrpMat, ONx::GrpMat, Ahom::HomGrp, KG::GrpMat) -> SeqEnum[Rec], SeqEnum, SeqEnum[Rec], SeqEnum
 {return all of the enhanced subgroups which contain the entire kernel (maximal size of gerbe, hence gerbisest), and having surjective reduced norm, in a list with each one being a record (rethink it).}
 
   subs:=Subgroups(G);
@@ -63,9 +63,21 @@ intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, AutFull::Map, G::Gr
   N := Modulus(BaseRing(G));
   surjH := [H : H in subs | #getDeterminantImage(H`subgroup, O, Ahom) eq EulerPhi(N)];
   surj_gerby_H := [H : H in surjH | KG subset H`subgroup];
+  
+  O1_subs := [H : H in subs | #getDeterminantImage(H`subgroup, O, Ahom) eq 1];
 
   ker_reds := getAllReductionKernels(OmodN, G meet ONx);
+  
+  ker_reds_O1 := AssociativeArray(Keys(ker_reds));
+  
+  for p in Keys(ker_reds) do
+      ker_reds_O1[p] := ker_reds[p] meet O1_subs[#O1_subs]`subgroup;
+  end for;
+  
   prime_kernels_in_H := [[] : H in surj_gerby_H];
+  
+  prime_kernels_in_H_O1 := [[] : H in O1_subs];
+  
   // !!!! TODO !!! Might be more efficient to get all subgroups containing a kernel of reduction every time
   for p in Keys(ker_reds) do
       for i->H in surj_gerby_H do
@@ -73,9 +85,14 @@ intrinsic EnumerateGerbiestSurjectiveH(OmodN::AlgQuatOrdRes, AutFull::Map, G::Gr
 	      Append(~prime_kernels_in_H[i], p);
 	  end if;
       end for;
+      for i->H in O1_subs do
+	  if ker_reds_O1[p] subset H`subgroup then
+	      Append(~prime_kernels_in_H_O1[i], p);
+	  end if;
+      end for;
   end for;
 
-  return surj_gerby_H, prime_kernels_in_H;
+  return surj_gerby_H, prime_kernels_in_H, O1_subs, prime_kernels_in_H_O1;
 end intrinsic;
 
 intrinsic EnumerateGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt : prime_kernel := []) -> SeqEnum[Rec]
@@ -183,10 +200,12 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 coarse_index,
 			 fine_label,
 			 gerbiness,
-			 is_coarse
-		       >;
-
-function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, AutFull, O, N, OmodN, G, mu, level)
+			 is_coarse,
+			 psl2label
+		       >;	  
+			  
+function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, 
+		      Ahom, AutFull, O, N, OmodN, G, mu, level)
     s := rec< GP_SHIM_RF | >;
     Hgp:=H`subgroup;
     fixedspace:=FixedSubspace(Hgp);
@@ -201,7 +220,6 @@ function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, Au
     is_split := (order eq #(Hgp meet Image(Ahom)) * #(Hgp meet ONxinGL4));
     Henhgens := [GL4ToPair(Hgp.i, O, Ahom) : i in [1..Ngens(Hgp)]];
     aut_mu_norms := [Abs(SquarefreeFactorization(Integers()!Norm(AutFull(pair[1])`element))) : pair in Henhgens];
-    //rho_end := sub<GL(4,ZmodN)|[Ahom(pair[1]) : pair in Henhgens]>;
 
     s`subgroup:=Hgp;
     s`level := level;
@@ -271,6 +289,7 @@ procedure updateLabels(~subs, G)
     end for;
     for i in [1..#subs] do
 	subs[i]`label := Sprintf("%o.%o", subs[i]`mu_label, subs[i]`coarse_label);
+	subs[i]`fine_label := subs[i]`coarse_label;
     end for;
 end procedure;
 
@@ -296,20 +315,39 @@ intrinsic GenerateDataForGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::Rng
 
    KG := GetKernelAsSubgroup(O, mu, N, G1plus);
 
-   subs, prime_kernels := EnumerateGerbiestSurjectiveH(OmodN, AutFull, G, ONxinGL4, Ahom, KG);
-   print "subs", #subs;
+   subs, prime_kernels, O1_subs, O1_prime_kernels := EnumerateGerbiestSurjectiveH(OmodN, AutFull, G, ONxinGL4, Ahom, KG);
+   vprintf ShimuraCurves, 1 : "subs %o\n", #subs;
+   vprintf ShimuraCurves, 1 : "O1_subs %o\n", #O1_subs;
 
    subs := [subs[i] : i in [1..#subs] | prime_kernels[i] eq prime_kernel];
-   print "#filtered", #subs;
+   vprintf ShimuraCurves, 1 : "#filtered %o\n", #subs;
+   O1_subs := [O1_subs[i] : i in [1..#O1_subs] | O1_prime_kernels[i] eq prime_kernel];
+   vprintf ShimuraCurves, 1 : "#O1 filtered %o\n", #O1_subs;
 
    ells := EllipticElementsGL4(O, mu, N);
 
    G1plusmodKG,Gmap:= quo< G1plus | KG >;
 
-   ret_subs := [createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, Ahom, AutFull, O, N, OmodN, G, mu, level) : H in subs];
-
+   ret_subs := [createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, 
+			     Ahom, AutFull, O, N, OmodN, G, mu, level) : H in subs];
+   
    updateLabels(~ret_subs, G);
 
+   G1 := O1_subs[#O1_subs]`subgroup;
+   ret_O1_subs := [createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, 
+				Ahom, AutFull, O, N, OmodN, G1, mu, level) : H in O1_subs];
+   
+   updateLabels(~ret_O1_subs, G);
+   
+   find_O1 := AssociativeArray();
+   for idx->H1 in ret_O1_subs do
+       find_O1[H1`subgroup] := idx;
+   end for;
+   
+   for idx->H in ret_subs do
+       ret_subs[idx]`psl2label := ret_O1_subs[find_O1[H`subgroup meet G1]]`label;
+   end for;
+   
    return ret_subs;
 end intrinsic;
 
@@ -366,15 +404,18 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	
 	bad_primes := PrimeDivisors(s`discO * s`level);
 	
+	// These q-bounds only hold when the bottom curve is genus 0
+	q_gon_bounds := [1, 2*s`index];
+	
 	if (s`genus in [0,1]) then
-	    gon_bounds := [1,2];
+	    qbar_gon_bounds := [1,2];
 	else
-	    gon_bounds := [1, 2*(s`genus-1)];
+	    qbar_gon_bounds := [1, 2*(s`genus-1)];
 	end if;
 	
 	s_fields := [* s`Glabel, 
 		       "F",
-		       s`autmuO_norms,
+		       writeSeqEnum(s`autmuO_norms),
 		       writeSeqEnum(bad_primes),
 		       "\\N",
 		       s`coarse_class,
@@ -427,9 +468,9 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 		       "\\N",
 		       "\\N",
 		       "\\N",
-		       writeSeqEnum(gon_bounds),
+		       writeSeqEnum(q_gon_bounds),
 		       "\\N",
-		       writeSeqEnum(gon_bounds),
+		       writeSeqEnum(qbar_gon_bounds),
 		       writeSeqEnum(perms_readable),
 		       "\\N",
 		       "\\N",
