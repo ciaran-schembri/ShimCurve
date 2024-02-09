@@ -4,6 +4,10 @@ from sage.misc.decorators import options, rename_keyword
 from sage.plot.hyperbolic_polygon import HyperbolicPolygon
 from sage.libs.pari.convert_sage import gen_to_sage
 
+
+#SECTION 1: GRAPHICS
+
+
 #To encode the png file as a string.
 def encode_mcurve_plot(P, transparent=True):
     from io import BytesIO as IO
@@ -63,32 +67,37 @@ def my_hyperbolic_polygon(pts, model="PD", resolution=200, circlecolor='black', 
         g = g + circle((0, 0), 1, rgbcolor=circlecolor)
     return g
 
-#Make the graphics object for D
-def level1fdom(D):
-    gp.setrand(1)
-    A = gp.alginit_Qdisc(D)
-    gp.setrand(1)
-    X = gp.afuchinit(A);
-    verts = gen_to_sage(pari(gp.afuchvertices(X, 1)));
+#Given the vertices for one fundamental domain, makes the domain as a Graphics object.
+def onefdomgraphicsobject(verts):
     g = Graphics()
     g += my_hyperbolic_polygon(verts, add_circle = True);
     g.axes(False)
     g.set_axes_range(-1, 1, -1, 1)
     return g
 
-#Make the level 1 pictures for all D in Dlist
-def make_pictures_level1(Dlist):
-    for D in Dlist:
-        g = level1fdom(D)
-        pngstr = encode_mcurve_plot(g)
-        fil = open(f"../data/fdompictures/{D}_1.fdom", "w")
-        fil.write(f"{pngstr}")
-        fil.close()
 
-def possible_D(Dmin, Dmax):
-    L = [];
-    for D in range(Dmin, Dmax + 1):
-        if len(factor(D)) % 2 == 0 and is_squarefree(D):
-            L.append(D)
-    return L
+#SECTION 2: FUNDAMENTAL DOMAINS
+
+
+#Return the fundamental domain for D
+def level1fdom(D):
+    gp.setrand(1)
+    A = gp.alginit_Qdisc(D)
+    gp.setrand(1)
+    X = gp.afuchinit(A);
+    return X
+    
+#Make the level 1 pictures for all D in Dlist. We need to also input the size of Aut_mu(O), so the pairs are [D, #Aut_mu] where mu is a degree 1 polarization.
+def make_pictures_level1(Dlistwithmu):
+    fil = open("../data/level1_pictures.fdom", "a")
+    for pair in Dlistwithmu:
+        D = pair[0]
+        sizeautmu = pair[1]
+        X = level1fdom(D)
+        verts = gen_to_sage(pari(gp.afuchvertices(X, 1)));
+        g = onefdomgraphicsobject(verts)
+        genus = gp.afuchsignature(X)[1]
+        pngstr = encode_mcurve_plot(g)
+        fil.write(f"{D}.1.1.{sizeautmu}.{genus}.a.1?{pngstr}\n")
+    fil.close()
 
