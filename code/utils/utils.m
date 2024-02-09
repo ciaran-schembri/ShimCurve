@@ -1,9 +1,24 @@
 
-intrinsic ReplaceAll(string::MonStgElt, char1::MonStgElt, char2::MonStgElt) -> MonStgElt
+/*intrinsic ReplaceAll(string::MonStgElt, char1::MonStgElt, char2::MonStgElt) -> MonStgElt
   {Replace all instances of the string char1 with char2 in string}
   return Pipe(Sprintf("sed \"s/%o/%o/g\"", char1, char2), string);
 end intrinsic;
+*/
 
+
+intrinsic ReplaceString(s::MonStgElt,c::MonStgElt,d::MonStgElt) -> MonStgElt
+{ Greedily replace each occurrence of string c in s with the string d. }
+    require #c ge 1: "The string to be replaced cannot be empty.";
+    m := #c;
+    t := "";
+    n := Index(s,c);
+    while n gt 0 do
+        t cat:= s[1..n-1] cat d;
+        s := s[n+m..#s];
+        n := Index(s,c);
+    end while;
+    return t cat s;
+end intrinsic;
 
 
 intrinsic getLines(file::MonStgElt) -> Any
@@ -96,7 +111,7 @@ end intrinsic;
 
 
 
-
+/*
 intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunFracSchElt[CrvEll[FldRat]]
   {If phi(x) = f(x)/g(x) and f = c^2*f0, g = d^2*g0 with f0, g0 irreducible; return f0/g0.}
   
@@ -128,33 +143,18 @@ intrinsic SquarefreeFactorization(phi::FldFunFracSchElt[Crv[FldRat]]) -> FldFunF
   //assert Sprint(phi) eq Sprint(cdivd^2*phi_sqfree);
 
   return phi_sqfree, c/d;
+end intrinsic;*/
+
+intrinsic remove_whitespace(X::MonStgElt) -> MonStgElt
+{ Strips spaces and carraige returns from string; much faster than StripWhiteSpace. }
+    return Join(Split(Join(Split(X," "),""),"\n"),"");
 end intrinsic;
 
-
-/*
-intrinsic Sprint(seq::SeqEnum : oneline:=false) -> MonStgElt 
-  {Sprint the sequence seq, if oneline is true then return it as a one-line string.}
-  if oneline eq false then 
-    return Sprint(seq);
-  else 
-    if Type(seq[1]) eq GrpPermElt then 
-      degree:=Degree(Parent(seq[1]));
-      elts:=Sprintf("[ Sym(%o) |",degree) cat (&cat[ Sprintf(" %o,",elt) : elt in seq ]);
-      elts:=ReplaceAll(elts,"Id($)",Sprintf("Id(Sym(%o))",degree));
-    else 
-      elts:="[" cat (&cat[ Sprintf(" %o,",elt) : elt in seq ]);
-    end if;
-
-    Prune(~elts);
-    elts:=elts cat " ]";
-    ev:=eval(elts);
-    assert ev eq seq;
-    return elts;
-  end if;
+intrinsic sprint(X::.) -> MonStgElt
+{ Sprints object X with spaces and carraige returns stripped. }
+    if Type(X) eq Assoc then return Join(Sort([ $$(k) cat "=" cat $$(X[k]) : k in Keys(X)]),":"); end if;
+    return remove_whitespace(Sprintf("%o",X));
 end intrinsic;
-*/
-
-
 
 intrinsic RealVector(v::ModTupFldElt) -> ModTupFldElt
   {Given the complex vector v = v1 + I*v2 of dimension g return it as a real vector 
@@ -256,20 +256,16 @@ intrinsic MapIsHomomorphism(AutmuO::. : injective:=true) -> BoolElt
 end intrinsic 
 
 
-
-
-
-intrinsic FixedSubspace(H::GrpMat) -> GrpAb 
-  {}
-  N:=#BaseRing(H);
-  ZmodN:=ResidueClassRing(N);
-  ZmodN4:= [ Matrix(ZmodN,1,4,[a,b,c,d]) : a,b,c,d in ZmodN ];
-  fixed_vectors:= [ v : v in ZmodN4 | forall(u){ g : g in H | v*g eq v } ];
-  A:=AbelianGroup([N,N,N,N]);
-  elts:=[ Eltseq(v) : v in fixed_vectors ];
-  fixedtors:=sub<A | elts >; 
-  //fixedsub:=sub< AbelianGroup([N,N,N,N]) | 
-  return fixedtors; //PrimaryAbelianInvariants(fixedsub);
+intrinsic FixedSubspace(H::GrpMat) -> GrpAb
+{}
+  N := #BaseRing(H);
+  M4R := MatrixAlgebra(Integers(N), 4);
+  Hgens := [H.i : i in [1..NumberOfGenerators(H)]];
+  A := AbelianGroup([N,N,N,N]);
+  if #Hgens eq 0 then
+    return A;
+  end if;
+  V := &meet[Kernel(M4R!h-1) : h in Hgens];
+  // Need to convert to abelian group
+  return sub<A | [Eltseq(v) : v in Generators(V)]>;
 end intrinsic;
-
-

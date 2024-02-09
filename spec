@@ -11,6 +11,7 @@ code
       igusa-invariants.m
       LFT.m
       polarization-twisting.m
+      lehmer.m
       }
   pqm-surfaces
       {
@@ -23,7 +24,8 @@ code
       read-write.m
       }
   quaternion_orders
-    {
-     enumerate-O.m
-    }
+      {
+      enumerate-O.m
+      }
+  verbose.m
   }
