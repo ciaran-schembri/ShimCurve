@@ -240,7 +240,7 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
 end intrinsic;
 
-intrinsic NumberOfHeptagonsInCover(N :: RngIntElt) -> RngIntElt
+intrinsic NumberOfHeptagonsInCover(N :: RngIntElt) -> RngIntElt, RngIntElt
 {given a positive squarefree integer N, first computes the Fuchsian group G associated to the
 maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
 a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
@@ -267,10 +267,10 @@ returns number of heptagons in an (almost-)cover of the fundamental domain of G 
     fd := FundamentalDomain(G,DD);
     _ := Group(G);
     heptcoverindices := HeptagonalCovering(G,z);
-    return #heptcoverindices;
-end function;
+    return #heptcoverindices, -d;
+end intrinsic;
 
-intrinsic AreaRatio(N :: RngIntElt) -> FldRatElt
+intrinsic AreaRatio(N :: RngIntElt) -> FldReElt, RngIntElt
 {given a positive squarefree integer N, first computes the Fuchsian group G associated to the
 maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
 a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
@@ -280,7 +280,7 @@ returns the ratio of the area of fundamental domain of G centered at z wrt area 
     G := FuchsianGroup(B);
     d := 5;
     while true do
-        if IsFundamentalDiscriminant(d) then
+        if IsFundamentalDiscriminant(-d) then
             try
                 ZK := Integers(QuadraticField(-d));
                 nu := Embed(ZK,O);
@@ -296,12 +296,45 @@ returns the ratio of the area of fundamental domain of G centered at z wrt area 
     DD := UnitDisc(:Center:=z);
     fd := FundamentalDomain(G,DD);
 
-    CC := ComplexField();
-    A := ArithmeticVolume(fd)*2*Pi(CC);
-    a := (1-1/2-1/3-1/7)*2*Pi(CC)*7;
-    return A/a;
+    RR := RealField();
+    A := ArithmeticVolume(fd)*2*Pi(RR);
+    a := (1-1/2-1/3-1/7)*2*Pi(RR)*7;
+    return A/a, -d;
 end intrinsic;
 
+intrinsic AreaRatio_SingleDisc(N :: RngIntElt) -> FldReElt, RngIntElt
+{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
+maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
+a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
+returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc.}
+    B<i,j,ij> := QuaternionAlgebra(N);
+    O := MaximalOrder(B);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    rho := Maximum([Distance(DD!0,DD!x) : x in fd]);
+
+    RR := RealField();
+    A := ArithmeticVolume(fd)*2*Pi(RR);
+    a := 4*Pi(RR)*Sinh(rho/2)^2;
+
+    return a/A, -d;
+end intrinsic;
 
 PrintFDCovering := procedure(L, Gamma, D);
 // L: List of tuples <center, radius>
