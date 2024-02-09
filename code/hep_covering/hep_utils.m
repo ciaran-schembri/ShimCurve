@@ -110,7 +110,7 @@ intrinsic HeptagonalCovering(Gamma::GrpPSL2, z::SpcHypElt) -> SeqEnum[RngIntElt]
     B := Algebra(O);
     gammagens := Gamma`ShimFDSidepairsDomain;
     prunecenters := [centers[1]];
-    indices := [];
+    indices := [1];
     for i := 2 to #centers do
         c := centers[i][3];
         euc_circle := HyperbolicToEuclideanCircle(c,r_hept);
