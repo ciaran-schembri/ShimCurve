@@ -41,7 +41,7 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
             lattice_labels:="\\N";
             lattice_x:="\\N";
             level:=N;
-            level_is_squarefree:=true;
+            level_is_squarefree:= "T";
             level_radical:="\\N";
             log_conductor:="\\N";
             models:="\\N";
@@ -70,9 +70,9 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
             psl2label:="\\N";
             gonality_temp:=GonalityBoundListX0DN(D,N);
             q_gonality:=gonality_temp[1];
-            q_gonality_bounds:=gonality_temp[2];
+            q_gonality_bounds:=Sprintf("{%o,%o}",gonality_temp[2][1],gonality_temp[2][2]);
             qbar_gonality:=gonality_temp[3];
-            qbar_gonality_bounds:=gonality_temp[4];
+            qbar_gonality_bounds:=Sprintf("{%o,%o}",gonality_temp[4][1],gonality_temp[4][2]);
             ram_data_elts:="\\N";
             rank:="\\N";
             reductions:="\\N";
@@ -82,7 +82,7 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
             torsion:="\\N";
             trace_hash:="\\N";
             traces:="\\N";
-            fprintf filename, Sprintf("%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o,%o \n",Glabel,all_degree1_points_known,autmuO_norms,bad_primes,cm_discriminants,coarse_class,coarse_class_num,coarse_index,coarse_label,coarse_num,conductor,curve_label,deg_mu,dims,discB,discO,fine_label,fine_num,fuchsian_index,galEnd,generators,genus,genus_minus_rank,gerbiness,has_obstruction,index,is_coarse,is_split,label,lattice_labels,lattice_x,level,level_is_squarefree,level_radical,log_conductor,models,mu_label,mults,name,newforms,nu2,nu3,nu4,nu6,num_bad_primes,num_known_degree1_noncm_points,num_known_degree1_points,obstructions,order_label,parents,parents_conj,pointless,power,psl2label,q_gonality,q_gonality_bounds,qbar_gonality,qbar_gonality_bounds,ram_data_elts,rank,reductions,scalar_label,simple,squarefree,torsion,trace_hash,traces);
+            fprintf filename, Sprintf("%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o?%o \n",Glabel,all_degree1_points_known,autmuO_norms,bad_primes,cm_discriminants,coarse_class,coarse_class_num,coarse_index,coarse_label,coarse_num,conductor,curve_label,deg_mu,dims,discB,discO,fine_label,fine_num,fuchsian_index,galEnd,generators,genus,genus_minus_rank,gerbiness,has_obstruction,index,is_coarse,is_split,label,lattice_labels,lattice_x,level,level_is_squarefree,level_radical,log_conductor,models,mu_label,mults,name,newforms,nu2,nu3,nu4,nu6,num_bad_primes,num_known_degree1_noncm_points,num_known_degree1_points,obstructions,order_label,parents,parents_conj,pointless,power,psl2label,q_gonality,q_gonality_bounds,qbar_gonality,qbar_gonality_bounds,ram_data_elts,rank,reductions,scalar_label,simple,squarefree,torsion,trace_hash,traces);
         end for;
     end for;
     return Sprint("Table produced :)");
