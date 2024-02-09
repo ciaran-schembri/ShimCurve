@@ -23,7 +23,7 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
             size_AutmuO := #AutmuO;
             coarse_index:=size_AutmuO;
             genus:=Genus(Gamma);
-            coarse_label:=Sprintf("%o.%o.1.1.%o.%o.%o.1", D, N, size_AutmuO, genus, coarse_class);
+            coarse_label:=Sprintf("1.%o.%o.%o.1", size_AutmuO, genus, coarse_class);
             coarse_num:=1;
             conductor:="\\N";
             curve_label:="\\N";
@@ -67,7 +67,7 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
                 order_label:=Sprintf("%o.%o",D,N);
             end if;
             mu_label:=order_label cat ".1";
-            label:=mu_label cat coarse_label;
+            label:=mu_label cat "." cat coarse_label;
             parents:="\\N";
             parents_conj:="\\N";
             pointless:="\\N";
