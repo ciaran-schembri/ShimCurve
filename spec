@@ -27,4 +27,5 @@ code
       {
       enumerate-O.m
       }
+  verbose.m
   }

@@ -105,9 +105,25 @@ intrinsic HeptagonalCovering(Gamma::GrpPSL2, z::SpcHypElt) -> SeqEnum[RngIntElt]
     N := Ceiling(fd_radius/r_hept);
     Gamma`LayeredHeptCover := HeptTilingTable(N);
     centers := &cat Gamma`LayeredHeptCover;
-    Gamma`HeptCoverCenters := centers;
 
-    return [1..#centers];
+    O := BaseRing(Gamma);
+    B := Algebra(O);
+    gammagens := Gamma`ShimFDSidepairsDomain;
+    prunecenters := [centers[1]];
+    indices := [1];
+    for i := 2 to #centers do
+        c := centers[i][3];
+        euc_circle := HyperbolicToEuclideanCircle(c,r_hept);
+        euc_radius := euc_circle[2];
+        boundary_pt := D!(c-euc_radius/AbsoluteValue(c)*c);
+        gg := HistoricShimuraReduceUnit(O!1, gammagens, Gamma, D : z0 := boundary_pt);
+        if gg[1][1] eq O!1 then
+            Append(~indices,i);
+            Append(~prunecenters,centers[i]);
+        end if;
+    end for;
+    Gamma`HeptCoverCenters := prunecenters;
+    return indices;
 end intrinsic;
 
 
@@ -169,11 +185,11 @@ function LocatePoint(z, tiling_centers : brute_force := false);
         else
             two_possibilities := [tiling_centers[l,j1],tiling_centers[l,j1+1]];
         end if;
-        print two_possibilities;
+//        print two_possibilities;
         for x in two_possibilities do
             center := D ! x[3];
             dist := Distance(center,D ! z);
-            print dist, r_hept;
+//            print dist, r_hept;
             if dist le r_hept then
                 Append(~output_centers, x);
             end if;
@@ -223,6 +239,69 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     Uses Eq 33.7.5 from John Voight - Quaternion Algebras}
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
 end intrinsic;
+
+intrinsic NumberOfHeptagonsInCover(N :: RngIntElt) -> RngIntElt
+{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
+maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
+a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
+returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z.}
+    B<i,j,ij> := QuaternionAlgebra(N);
+    O := MaximalOrder(B);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    _ := Group(G);
+    heptcoverindices := HeptagonalCovering(G,z);
+    return #heptcoverindices;
+end function;
+
+intrinsic AreaRatio(N :: RngIntElt) -> FldRatElt
+{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
+maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
+a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
+returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc.}
+    B<i,j,ij> := QuaternionAlgebra(N);
+    O := MaximalOrder(B);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+
+    CC := ComplexField();
+    A := ArithmeticVolume(fd)*2*Pi(CC);
+    a := (1-1/2-1/3-1/7)*2*Pi(CC)*7;
+    return A/a;
+end intrinsic;
+
 
 PrintFDCovering := procedure(L, Gamma, D);
 // L: List of tuples <center, radius>
