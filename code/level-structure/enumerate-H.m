@@ -201,7 +201,8 @@ GP_SHIM_RF := recformat< level : Integers(),
 			 fine_label,
 			 gerbiness,
 			 is_coarse,
-			 psl2label
+			 psl2label,
+			 scalar_label
 		       >;	  
 			  
 function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4, 
@@ -220,7 +221,7 @@ function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4,
     is_split := (order eq #(Hgp meet Image(Ahom)) * #(Hgp meet ONxinGL4));
     Henhgens := [GL4ToPair(Hgp.i, O, Ahom) : i in [1..Ngens(Hgp)]];
     aut_mu_norms := [Abs(SquarefreeFactorization(Integers()!Norm(AutFull(pair[1])`element))) : pair in Henhgens];
-
+    
     s`subgroup:=Hgp;
     s`level := level;
     s`genus:=genus;
@@ -230,11 +231,14 @@ function createRecord(H, G1plus, KG, G1plusmodKG, Gmap, ells, ONxinGL4,
     s`fuchsian_index:=fuchsian_index;
     s`gerbiness:=#KG;
     s`torsion:=PrimaryAbelianInvariants(fixedspace);
-    s`Glabel:=GroupLabel(Hgp);
+    s`Glabel:= N eq level select GroupLabel(Hgp) else 
+	       GroupLabel(Hgp / getKernelOfReduction(OmodN, N div level, G meet ONxinGL4));
     s`galEnd:=GroupLabel(Domain(Ahom));
     s`autmuO_norms:=aut_mu_norms;
     s`is_split:=is_split;
-    s`generators:=[<AutFull(g[1]),g[2]> : g in Henhgens];
+    s`generators:= N eq level select [<AutFull(g[1]),g[2]> : g in Henhgens] else 
+		   [<AutFull(g[1]),[Integers()!x mod level : x in Eltseq(g[2])]> : g in Henhgens];
+    s`generators:= [g : g in Set(s`generators)];
     s`ram_data_elts:=sigma;
     s`discO := Discriminant(O);
     s`discB := Discriminant(Algebra(O));
@@ -339,13 +343,14 @@ intrinsic GenerateDataForGerbiestSurjectiveH(O::AlgQuatOrd,mu::AlgQuatElt,N::Rng
    
    updateLabels(~ret_O1_subs, G);
    
-   find_O1 := AssociativeArray();
-   for idx->H1 in ret_O1_subs do
-       find_O1[H1`subgroup] := idx;
-   end for;
-   
    for idx->H in ret_subs do
-       ret_subs[idx]`psl2label := ret_O1_subs[find_O1[H`subgroup meet G1]]`label;
+       H1 := H`subgroup meet G1;
+       // !! TODO !! There should be a better way to do it - problem we need to check for conjugation
+       assert exists(H_O1){H_O1 : H_O1 in ret_O1_subs | IsConjugate(G, H1, H_O1`subgroup)};
+       ret_subs[idx]`psl2label := H_O1`label;
+       scalar_index := Index(H`subgroup, H1);
+       // At the moment we are not sure how to label the scalar subgroup, leaving 1 in the end
+       ret_subs[idx]`scalar_label := Sprintf("%o.%o.1", level, scalar_index);
    end for;
    
    return ret_subs;
@@ -404,12 +409,16 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 	
 	bad_primes := PrimeDivisors(s`discO * s`level);
 	
-	// These q-bounds only hold when the bottom curve is genus 0
-	q_gon_bounds := [1, 2*s`index];
-	
 	if (s`genus in [0,1]) then
+	    // These q-bounds only hold when the bottom curve is genus 0
+	    q_gon_bounds := [1, 2*s`index];
+	    if s`genus eq 0 then
+		q_gon_bounds := [1,2];
+	    end if;
 	    qbar_gon_bounds := [1,2];
 	else
+	    q_gon_bounds := [1, 2*(s`genus - 1)];
+	    // These could be better - maybe (g+3)/2 ? Ask Oana and Freddy
 	    qbar_gon_bounds := [1, 2*(s`genus-1)];
 	end if;
 	
@@ -474,7 +483,7 @@ intrinsic WriteSubgroupsDataToFile(file::IO, subs::SeqEnum[Rec])
 		       writeSeqEnum(perms_readable),
 		       "\\N",
 		       "\\N",
-		       "1.1.1",
+		       s`scalar_label,
 		       "\\N",
 		       "\\N",
 		       writeSeqEnum(s`torsion),
