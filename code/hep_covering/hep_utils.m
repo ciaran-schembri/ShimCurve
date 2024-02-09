@@ -240,13 +240,12 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
 end intrinsic;
 
-intrinsic NumberOfHeptagonsInCover(N :: RngIntElt) -> RngIntElt, RngIntElt
-{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
-maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
-a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
-returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z.}
-    B<i,j,ij> := QuaternionAlgebra(N);
-    O := MaximalOrder(B);
+intrinsic NumberOfHeptagonsInCover(O :: AlgQuatOrd) -> RngIntElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
     G := FuchsianGroup(B);
     d := 5;
     while true do
@@ -270,13 +269,12 @@ returns number of heptagons in an (almost-)cover of the fundamental domain of G 
     return #heptcoverindices, -d;
 end intrinsic;
 
-intrinsic AreaRatio(N :: RngIntElt) -> FldReElt, RngIntElt
-{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
-maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
-a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
-returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc.}
-    B<i,j,ij> := QuaternionAlgebra(N);
-    O := MaximalOrder(B);
+intrinsic AreaRatio(O :: AlgQuatOrd) -> FldReElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
     G := FuchsianGroup(B);
     d := 5;
     while true do
@@ -302,13 +300,13 @@ returns the ratio of the area of fundamental domain of G centered at z wrt area 
     return A/a, -d;
 end intrinsic;
 
-intrinsic AreaRatio_SingleDisc(N :: RngIntElt) -> FldReElt, RngIntElt
-{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
-maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
-a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
-returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc.}
-    B<i,j,ij> := QuaternionAlgebra(N);
-    O := MaximalOrder(B);
+intrinsic AreaRatio_SingleDisc(O :: AlgQuatOrd) -> FldReElt, RngIntElt
+{given an order O in a quaternion algebra B, first computes the associated Fuchsian group G, 
+and a CM point z corresponding to an imaginary quadratic subring with fundamental discriminant 
+-d < -4, and |d| smallest.
+returns the ratio of the area of a single disc centered at 0 covering the fundamental domain of G centered at z
+wrt the area of fundamental domain, and -d.}
+    B<i,j,ij> := QuaternionAlgebra(O);
     G := FuchsianGroup(B);
     d := 5;
     while true do
