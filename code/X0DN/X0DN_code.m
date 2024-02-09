@@ -2,7 +2,6 @@
 // Date: 02/09/2024
 
 
-
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 //
@@ -242,30 +241,6 @@ intrinsic SignatureX0DNmodAtkinLehnerElement(D::RngIntElt,N::RngIntElt,m::RngInt
     g_quotient := (1/4)*(2*g+2 - fixed_number);
     return [* g_quotient,[2,s2],[3,s3], [4,s4], [6,s6] *];
 end intrinsic;
-
-
-// Signature tables
-
-intrinsic SignatureTable(DBound::RngIntElt, NBound::RngIntElt) -> Any
-    {Outputs signature table of the shimura curves X0(D;N)/<w_i> and for all Atkin-Lehner elements w_i, where i is a Hall divisor of N*D (i=1 included).}
-
-    filename := Sprintf("SignatureTableX0_%o_%o.txt", DBound, NBound);
-    Write(filename, Sprint("Discriminant ? Level ? w_i ? Genus ? Elliptic Point Counts"));
-    // we only want D square-free, with an even number of prime factors.
-    for D in [D : D in [6..DBound] | MoebiusMu(D) eq 1] do
-        // we want N that are coprime to D
-        for N in [M : M in [1..NBound] | GCD(D,M) eq 1] do
-            for m in HallDivisors(D*N) do
-                signature := SignatureX0DNmodAtkinLehnerElement(D,N,m);
-                g := signature[1];
-                ellipticCounts := [signature[2],signature[3],signature[4],signature[5]];
-                Write(filename, Sprintf("%o ? %o ? %o ? %o ? %o ", D, N, m, g, ellipticCounts));
-            end for;
-        end for;
-    end for;
-    return Sprint("Signature table produced :)");
-end intrinsic;
-
 
 
 
@@ -1242,30 +1217,6 @@ end intrinsic;
 
 
 
-// Rational CM Points tables
-
-intrinsic RationalCMPointsTable(DBound::RngIntElt, NBound::RngIntElt) -> Any
-    {Outputs table with (lower bounds on) number of closed CM points of specified fundamental discriminants for quotients X0(D;N)/<w_i> of X_0(D;N) by a single Atkin--Lehner element w_i with i>1 for N squarefree.}
-
-    filename := Sprintf("RationalCMPointsTableX0DN_%o_%o.txt", DBound, NBound);
-    Write(filename, Sprint("Discriminant ? Level ? m ? Rational CM Points "));
-    // we only want D square-free, with an even number of prime factors.
-    for D in [D : D in [6..DBound] | MoebiusMu(D) eq 1] do
-        // we want N that are coprime to D and squarefree
-        for N in [M : M in [1..NBound] | (GCD(D,M) eq 1) and IsSquarefree(M)] do
-            quotients_list := RationalCMPointsX0DN(D,N)[3];
-            // loop over non-trivial Hall Divisors m of DN
-            for pair in quotients_list do
-                m := pair[1];
-                rat_CM_pts := pair[2];
-                Write(filename, Sprintf("%o ? %o ? %o ? %o", D, N, m, rat_CM_pts));
-            end for;
-        end for;
-    end for;
-    return Sprint("Rational CM Points table produced :D");
-end intrinsic
-
-
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -1276,8 +1227,8 @@ end intrinsic
 //////////////////////////////////////////////////////////////
 
 
-intrinsic GonalityBoundListX0DN(D::RngIntElt, N::RngIntElt) -> SeqEnum
-{Given an indefinite rational quaternion discriminant D, a coprime positive integer N, returns a sequence [D, N, gon_Q_low, gon_Q_high, gon_Qbar_low, gon_Qbar_high] where gon_Q_low is a lower bound for the Q-gonality of X_0(D;N) gon_Q_high is an upper bound for the Q-gonality of X_0(D;N) gon_Qbar_low is a lower bound for the Qbar-gonality of X_0(D;N) gon_Qbar_high is an upper bound for the Qbar-gonality of X_0(D;N)}
+intrinsic GonalityBoundListX0DN(D::RngIntElt, N::RngIntElt) -> List
+{Given an indefinite rational quaternion discriminant D, a coprime positive integer N, returns a list [*gon_Q, [gon_Q_low, gon_Q_high], gon_Qbar, [gon_Qbar_low, gon_Qbar_high]*] where gon_Q_low is a lower bound for the Q-gonality of X_0(D;N) gon_Q_high is an upper bound for the Q-gonality of X_0(D;N) gon_Qbar_low is a lower bound for the Qbar-gonality of X_0(D;N) gon_Qbar_high is an upper bound for the Qbar-gonality of X_0(D;N), gon_Q is the Q-gonality of X_0(D;N) if the lower and upper bounds match and "\\N", and similarly for the Qbar-gonality}
 
     // g <= 2
     g_eq0 := [[6,1],[10,1],[22,1]];
@@ -1435,30 +1386,20 @@ intrinsic GonalityBoundListX0DN(D::RngIntElt, N::RngIntElt) -> SeqEnum
     gon_Q_low := Ceiling(gon_Q_low/2)*2;
     gon_Q_high := Floor(gon_Q_high/2)*2;
 
-    return [D,N,gon_Q_low,gon_Q_high,gon_Qbar_low,gon_Qbar_high];
+    if gon_Q_low eq gon_Q_high then 
+        gon_Q := gon_Q_low;
+    else 
+        gon_Q := "\\N";
+    end if;
+
+    if gon_Qbar_low eq gon_Qbar_high then 
+        gon_Qbar := gon_Q_low;
+    else 
+        gon_Qbar := "\\N";
+    end if;
+
+    return [*gon_Q,[gon_Q_low,gon_Q_high],gon_Qbar,[gon_Qbar_low,gon_Qbar_high]*];
 end intrinsic;
-
-
-
-// Gonality bound tables
-
-intrinsic GonalityBoundsTable(DBound::RngIntElt, NBound::RngIntElt) -> Any
-    {Outputs gonality bounds table for the shimura curves X0(D;N).}
-
-    filename := Sprintf("GonalityBoundTableX0DN_%o_%o.txt", DBound, NBound);
-    Write(filename, Sprint("Discriminant ? Level ? Q-gonality >= ? Q-gonality <= ? Qbar-gonality >= ? Qbar-gonality <= "));
-    // we only want D square-free, with an even number of prime factors.
-    for D in [D : D in [6..DBound] | MoebiusMu(D) eq 1] do
-        // we want N that are coprime to D
-        for N in [M : M in [1..NBound] | GCD(D,M) eq 1] do
-            bounds := GonalityBoundListX0DN(D,N);
-            Write(filename, Sprintf("%o ? %o ? %o ? %o ? %o ? %o ", D, N, bounds[3], bounds[4], bounds[5], bounds[6]));
-        end for;
-    end for;
-    return Sprint("Gonality Bounds table produced >:)");
-end intrinsic
-
-
 
 
 
