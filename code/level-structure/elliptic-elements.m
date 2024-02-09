@@ -157,7 +157,7 @@ intrinsic NormalizerPlusGeneratorsEnhanced(O::AlgQuatOrd,mu::AlgQuatOrdElt) -> T
   ker,kergen:=SemidirectToNormalizerKernel(O,mu);
   Ocirc:=EnhancedSemidirectProduct(O);
   Nplus:=NormalizerPlusGenerators(O);
-  return [ Ocirc!NormalizerToAutmuO(O,O!mu,O!a) : a in NormalizerPlusGenerators(O) ] /*cat [Ocirc!kergen]*/;
+  return [ Ocirc!NormalizerToAutmuO(O,O!mu,O!a) : a in NormalizerPlusGenerators(O) ] cat [Ocirc!kergen];
 end intrinsic;
 
 intrinsic NormalizerPlusGeneratorsEnhanced(O::AlgQuatOrd,mu::AlgQuatElt) -> Tup 
