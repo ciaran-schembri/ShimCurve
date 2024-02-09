@@ -5,7 +5,7 @@ intrinsic X0DNdata(DBound::RngIntElt, NBound::RngIntElt) -> Any
     fprintf filename, "Glabel?all_degree1_points_known?autmuO_norms?bad_primes?cm_discriminants?coarse_class?coarse_class_num?coarse_index?coarse_label?coarse_num?conductor?curve_label?deg_mu?dims?discB?discO?fine_label?fine_num?fuchsian_index?galEnd?generators?genus?genus_minus_rank?gerbiness?has_obstruction?index?is_coarse?is_split?label?lattice_labels?lattice_x?level?level_is_squarefree?level_radical?log_conductor?models?mu_label?mults?name?newforms?nu2?nu3?nu4?nu6?num_bad_primes?num_known_degree1_noncm_points?num_known_degree1_points?obstructions?order_label?parents?parents_conj?pointless?power?psl2label?q_gonality?q_gonality_bounds?qbar_gonality?qbar_gonality_bounds?ram_data_elts?rank?reductions?scalar_label?simple?squarefree?torsion?trace_hash?traces\n";
     fprintf filename, "text?boolean?integer[]?integer[]?integer[]?text?integer?integer?text?integer?integer[]?text?integer?integer[]?integer?integer?text?integer?integer?text?integer[]?integer?integer?integer?smallint?integer?boolean?boolean?text?text[]?integer[]?integer?boolean?integer?numeric?smallint?text?integer[]?text?text[]?integer?integer?integer?integer?integer?integer?integer?integer[]?text?text[]?integer[]?boolean?boolean?text?integer?integer[]?integer?integer[]?numeric[]?integer?text[]?text?boolean?boolean?integer[]?bigint?integer[]\n\n";
     // we only want D square-free, with an even number of prime factors.
-    for D in [D : D in [6..DBound] | MoebiusMu(D) eq 1] do
+    for D in [D : D in [10..DBound] | MoebiusMu(D) eq 1] do
         // we want N that are coprime to D and square-free.
         for N in [N : N in [1..NBound] | GCD(D,N) eq 1] do
             O := QuaternionOrder(D,N);
