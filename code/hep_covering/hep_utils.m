@@ -240,11 +240,41 @@ intrinsic HyperbolicToEuclideanCircle(ws::SeqEnum,r::FldReElt) -> SeqEnum
     return [HyperbolicToEuclideanCircle(w,r) : w in ws];
 end intrinsic;
 
-intrinsic numberofheptagons(N);
+intrinsic NumberOfHeptagonsInCover(N :: RngIntElt) -> RngIntElt
 {given a positive squarefree integer N, first computes the Fuchsian group G associated to the
 maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
-a imaginary quadratic subring with fundamental discriminant -d < -4.
+a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
 returns number of heptagons in an (almost-)cover of the fundamental domain of G centered at z.}
+    B<i,j,ij> := QuaternionAlgebra(N);
+    O := MaximalOrder(B);
+    G := FuchsianGroup(B);
+    d := 5;
+    while true do
+        if IsFundamentalDiscriminant(-d) then
+            try
+                ZK := Integers(QuadraticField(-d));
+                nu := Embed(ZK,O);
+                break;
+            catch e;
+                d := d+1;
+            end try;
+        else
+            d := d+1;
+        end if;
+    end while;
+    z := FixedPoints(G!nu, UpperHalfPlane())[1];
+    DD := UnitDisc(:Center:=z);
+    fd := FundamentalDomain(G,DD);
+    _ := Group(G);
+    heptcoverindices := HeptagonalCovering(G,z);
+    return #heptcoverindices;
+end function;
+
+intrinsic AreaRatio(N :: RngIntElt) -> FldRatElt
+{given a positive squarefree integer N, first computes the Fuchsian group G associated to the
+maximal order in the quaternion algebra of discriminant N, and a CM point z corresponding to
+a imaginary quadratic subring with fundamental discriminant -d < -4, and |d| smallest.
+returns the ratio of the area of fundamental domain of G centered at z wrt area of a heptagonal disc.}
     B<i,j,ij> := QuaternionAlgebra(N);
     O := MaximalOrder(B);
     G := FuchsianGroup(B);
@@ -265,10 +295,12 @@ returns number of heptagons in an (almost-)cover of the fundamental domain of G 
     z := FixedPoints(G!nu, UpperHalfPlane())[1];
     DD := UnitDisc(:Center:=z);
     fd := FundamentalDomain(G,DD);
-    _ := Group(G);
-    heptcoverindices := HeptagonalCovering(G,z);
-    return #heptcoverindices;
-end function;
+
+    CC := ComplexField();
+    A := ArithmeticVolume(fd)*2*Pi(CC);
+    a := (1-1/2-1/3-1/7)*2*Pi(CC)*7;
+    return A/a;
+end intrinsic;
 
 
 PrintFDCovering := procedure(L, Gamma, D);
