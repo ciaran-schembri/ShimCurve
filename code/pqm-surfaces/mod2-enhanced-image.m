@@ -16,7 +16,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   f:=HyperellipticPolynomials(X);
   XR:=RiemannSurface(f,2 : Precision:=prec);
-  //assert XR`BasePoint eq XR![0,0];
+  assert XR`BasePoint eq XR![0,0];
 
 	QA2:=SplittingField(f);
 	L:=HeuristicEndomorphismFieldOfDefinition(X);
@@ -30,7 +30,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   frootsM:=[ a[1] : a in Roots(ChangeRing(f,M))];
   assert IsCoercible(Rationals(),frootsM[1]);
   frootsC:=[ Evaluate(a,embC) : a in frootsM ];
-  //assert frootsM[1] eq 0;
+  assert frootsM[1] eq 0;
   
 
   endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
@@ -182,7 +182,9 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
 end intrinsic;
   
 
-//X:=HyperellipticCurve(R![ -6984, -1164, 11058, -19303, 291, 5529, 873 ], R![]);
-
-
+//fx:=-x^5+4*x^4-10*x^3+8*x^2-2*x;
+//X:=HyperellipticCurve(fx);
    
+
+
+
