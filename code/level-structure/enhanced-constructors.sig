@@ -20,10 +20,12 @@ S,eq,Decide if Ocirc1 equals Ocirc2,0,2,0,0,0,0,0,0,0,AlgQuatEnh,,0,0,AlgQuatEnh
 S,*,compute x*y in OmodN,0,2,0,0,0,0,0,0,0,AlgQuatOrdResElt,,0,0,AlgQuatOrdResElt,,AlgQuatOrdResElt,-38,-38,-38,-38,-38
 S,*,compute x*y in B^x/F^x,0,2,0,0,0,0,0,0,0,AlgQuatProjElt,,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,*,compute x*y in enhanced semidirect produt,0,2,0,0,0,0,0,0,0,AlgQuatEnhElt,,0,0,AlgQuatEnhElt,,AlgQuatEnhElt,-38,-38,-38,-38,-38
-S,^,compute x*y in B^x/F^x,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
+S,^,compute x^y in (O/N)^x,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatOrdResElt,,AlgQuatOrdResElt,-38,-38,-38,-38,-38
+S,^,compute x^y in B^x/F^x,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,^,g^exp in enhanced semidirect product,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatEnhElt,,AlgQuatEnhElt,-38,-38,-38,-38,-38
 S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,-1,-38,-38,-38,-38,-38
 S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,-1,-38,-38,-38,-38,-38
+S,Norm,Norm of the element of the enhanced semidirect product as an element of (Z/N)^x,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,321,-38,-38,-38,-38,-38
 S,PrimitiveElement,We consider the coset of x in B^x/Q^x: this coset has a unique representative b of squarefree and integral norm. Return b,0,1,0,0,0,0,0,0,0,18,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,PrimitiveElement,We consider the coset of x in B>0^x/Q^x: this coset has a unique representative b of squarefree and integral norm. Return b,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,Parent,,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,AlgQuatOrdRes,-38,-38,-38,-38,-38
@@ -36,7 +38,9 @@ S,IsCoercible,,0,2,0,0,0,0,0,0,0,-1,,0,0,AlgQuatOrdRes,,36,-1,-38,-38,-38,-38
 S,IsCoercible,,0,2,0,0,0,0,0,0,0,-1,,0,0,AlgQuatProj,,36,-1,-38,-38,-38,-38
 S,IsCoercible,,0,2,0,0,0,0,0,0,0,-1,,0,0,AlgQuatEnh,,36,-1,-38,-38,-38,-38
 S,IsUnit,return whether x in O/N is a unit,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,36,-38,-38,-38,-38,-38
+S,Norm,Norm of the element of the enhanced semidirect product as an element of (Z/N)^x,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,321,-38,-38,-38,-38,-38
 S,Set,return the set of elements O/N,0,1,0,0,0,0,0,0,0,AlgQuatOrdRes,,-50,-38,-38,-38,-38,-38
+S,Modulus,Return the level N of OmodN,0,1,0,0,0,0,0,0,0,AlgQuatOrdRes,,148,-38,-38,-38,-38,-38
 S,UnitGroup,"return (O/N)^x as a permutation group G, the second value is the isomorphism G ->(O/N)^x",0,1,0,0,0,0,0,0,0,AlgQuatOrdRes,,178,175,-38,-38,-38,-38
 S,UnitGroup,"return (O/N)^x as a permutation group G, the second value is the isomorphism G ->(O/N)^x",0,2,0,0,0,0,0,0,0,148,,0,0,19,,178,175,-38,-38,-38,-38
 S,Print,,0,1,0,0,1,0,0,0,0,AlgQuatOrdResElt,,-38,-38,-38,-38,-38,-38

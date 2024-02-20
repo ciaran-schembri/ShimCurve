@@ -68,7 +68,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   enhancedmap:=map< Gal -> Omod2_elts | sigma :-> 
   Omod2_elts[[ i : i in [1..#twotorsion_points] | IsCoercible(Latendo,Eltseq(RealVector(twotorsion_points[i] - 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[2]),embC),0])))) ][1]] >;
 
-  return Gal,map,enhancedmap;
+  return Gal,map,enhancedmap,O;
  end intrinsic;
 
 
@@ -104,7 +104,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
 
   AutFull:=Aut(O,mu);
-  Autmuimage:=[AutFull(c) : c in Domain(AutFull) ];
+  Autmuimage:=[ AutFull(c) : c in Domain(AutFull) ];
   Autmu_alg:= [ SquarefreeFactorization(Rationals()!((g^2)`element)) : g in Autmuimage ];
   Exclude(~Autmu_alg,1);
   Autmu_alg:=[1] cat Autmu_alg;
@@ -136,8 +136,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   endotoautmuO := map< endo_discs -> Autmuimage | d :-> Autmuimage[Index(Autmu_alg,d)] >;
 
   endomorphism_rep:= auttoendo*endotoautmuO;
+  assert MapIsHomomorphism(endomorphism_rep : injective:=true);
 
-  return Gal, map, endomorphism_rep;
+  return Gal, map, endomorphism_rep, O;
 
 end intrinsic;
 
@@ -149,9 +150,13 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
           3. the enhanced representation as a map from automorphisms of the field to elements of the enhanced semidirect product.}
 
   
-  Galgrp2,Galmap2,mod2map:=Mod2GaloisMapPQM(X : prec:=prec);
-  Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec);
+  Galgrp2,Galmap2,mod2map,O1:=Mod2GaloisMapPQM(X : prec:=prec);
+  Galgrp_end,Galmap_end,rho_end,O2:=EndomorphismRepresentationPQM(X : prec:=prec);
 
+  //Let's check O1 and O2 are THE SAME, not just isomorphic. Note there is no such thing as O1 eq O2.
+  assert StandardForm(QuaternionAlgebra(O1)) eq StandardForm(QuaternionAlgebra(O2));
+  assert [ Eltseq(b) : b in Basis(O1) ] eq [ Eltseq(b) : b in Basis(O2) ];
+  //We will work with O2 because the image of rho_end needs to be in O2 (because it's in the normalizer).
 
   M:=Domain(Galmap2(Galgrp2.1));
   L:=Domain(Galmap_end(Galgrp_end.1));
@@ -165,7 +170,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   restrict_gal:= map< Galgrp2 -> Galgrp_end | sigma :-> quomap(sigma) >;
   restrict_rho_end:=restrict_gal*rho_end;
 
-  Bmod2:=QuaternionAlgebra(Universe(Codomain(mod2map))`quaternionorder);
+  /*Bmod2:=QuaternionAlgebra(Universe(Codomain(mod2map))`quaternionorder);
   Bend:=Universe(Codomain(rho_end))`quaternionalgebra;
   _,Bmap:=IsIsomorphic(Bend,Bmod2 : Isomorphism:=true);
   Bmod2modQx:=QuaternionAlgebraModuloScalars(Bmod2);
@@ -173,17 +178,21 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);
   tr,B:=IsQuaternionAlgebra(B2);
   //O:=MaximalOrder(QuaternionAlgebra(Discriminant(B)));
-  O:=Universe(Codomain(mod2map))`quaternionorder;
-  Oenh:=EnhancedSemidirectProduct(O : N:=2);
+  O:=Universe(Codomain(mod2map))`quaternionorder;*/
+  B:=QuaternionAlgebra(O2);
+  BxmodQx:=QuaternionAlgebraModuloScalars(B);
+  Omod2:=quo(O2,2);
+  Oenh:=EnhancedSemidirectProduct(O2 : N:=2);
 
-  rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> < Bmod2modQx!(Bmap(restrict_rho_end(sigma)`element)), mod2map(sigma)>  >;
+  rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> < restrict_rho_end(sigma), Omod2!(O2!Eltseq(mod2map(sigma)`element)) >  >;
 
-  return Galgrp2, Galmap2, rho_enhanced;
+  assert MapIsHomomorphism(rho_enhanced : injective:=true);
+  return Galgrp2, Galmap2, rho_enhanced,O;
 end intrinsic;
   
 
-//fx:=-x^5+4*x^4-10*x^3+8*x^2-2*x;
-//X:=HyperellipticCurve(fx);
+//Rx<x>:=PolynomialRing(Rationals()); fx:=-x^5+4*x^4-10*x^3+8*x^2-2*x; X:=HyperellipticCurve(fx);
+
    
 
 
