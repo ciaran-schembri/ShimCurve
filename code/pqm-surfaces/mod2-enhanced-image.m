@@ -26,6 +26,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   L:=OptimizedRepresentation(L);
 
 	M:=Compositum(QA2,L);
+  //Mdef:=DefiningPolynomial(M);
+  //Mdefred:=Polred(Mdef);
+  //M:=NumberField(Mdefred);
 	ooplaces:=InfinitePlaces(M);
 	embC:=ooplaces[1];
 
@@ -75,8 +78,8 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   assert forall(e){ x : x in twotorsion_points_real | IsCoercible(Latendo,Eltseq(2*x)) };
   assert #{ x : x in twotorsion_points_real | IsCoercible(Latendo,Eltseq(x)) } eq 1;
   assert not(exists(t){ [T1,T2] : T1,T2 in twotorsion_points_real | IsCoercible(Latendo,Eltseq(T1-T2)) and (T1 ne T2) });
-  cyclic_module := [ twotorsion_points[i] : i in [1..#twotorsion_points] 
-    | not(exists(e){ twotorsion_points[j] : j in [1..#twotorsion_points] | j lt i and IsCoercible(Latendo,Eltseq(twotorsion_points_real[i]-twotorsion_points_real[j])) }) ];
+  //cyclic_module := [ twotorsion_points[i] : i in [1..#twotorsion_points] 
+    //| not(exists(e){ twotorsion_points[j] : j in [1..#twotorsion_points] | j lt i and IsCoercible(Latendo,Eltseq(twotorsion_points_real[i]-twotorsion_points_real[j])) }) ];
 
   Gal,auts,map:=AutomorphismGroup(M);
 
@@ -118,8 +121,20 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   Gal,auts,map:=AutomorphismGroup(L);
   //assert GroupName(Gal) eq "C2^2";
 
+  AutFull:=Aut(O,mu);
+  wchi:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_chi" ][1];
+  wmu:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_mu" ][1];  
+
   if IsCyclic(Gal) then 
-    return "Galois group is cyclic";
+    if #Gal in [4,6] then 
+      sigma_mu:=Gal.1;
+      elts:= [ <sigma_mu^l, wmu^l> : l in [0..#Gal/2-1] ];
+      galmap_init:=map< Gal -> Domain(AutFull) | elts >;
+      endomorphism_rep := galmap_init*AutFull;
+      assert MapIsHomomorphism(endomorphism_rep : injective:=true);
+    else
+      return "Galois group is cyclic but not sure what to assign the generator yet";
+    end if;
   end if;
 
   tr,muchi:=IsTwisting(O,mu);
@@ -155,10 +170,6 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   sigma_chi := tup_chi[1][1];
 
   assert Gal eq sub< Gal | sigma_mu, sigma_chi >;
-
-  AutFull:=Aut(O,mu);
-  wchi:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_chi" ][1];
-  wmu:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_mu" ][1];  
 
   elts:= [ <sigma_mu^l*sigma_chi^k, wmu^l*wchi^k> : l in [0..#Gal/2-1], k in [0..1] ];
   galmap_init:=map< Gal -> Domain(AutFull) | elts >;
@@ -256,6 +267,9 @@ end intrinsic;
 //Rx<x>:=PolynomialRing(Rationals()); fx:=-x^5+4*x^4-10*x^3+8*x^2-2*x; X:=HyperellipticCurve(fx);
 
    
-
+/*
+//LIPSCHITZ debugging
+ mod2map(Identity(Galgrp2));   //[1 1 0 0]
+*/
 
 
