@@ -1,7 +1,7 @@
 
 
  
-t:=101;
+t:=3;
 
 Rx<x>:=PolynomialRing(Rationals());
 f:=x^5 + 8*x^4 + t*x^3 + 16*x^2-4*x;
