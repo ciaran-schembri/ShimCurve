@@ -121,13 +121,18 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   if IsCyclic(Gal) then 
     return "Galois group is cyclic";
   end if;
+
+  tr,muchi:=IsTwisting(O,mu);
+  chi:=muchi[2];
   
-  maybe_muchi := [ g : g in Gal | Order(g) in [2,#Gal/2] ];
+  cycsubs_init := [ H`subgroup : H in Subgroups(Gal : IsCyclic:=true) | H`order in [2,#Gal/2] ]; 
+  cycsubs := [ H : H  in cycsubs_init | forall(e){ G : G in Exclude(cycsubs_init,H) | H notin [ N`subgroup : N in Subgroups(G) ] } ];
+  maybe_muchi := [ H.1 : H in cycsubs ];
   endos := [];
   for sigma in maybe_muchi do 
     Ksigma:=FixedField(L,[map(sigma)]);
-    Ksigma := OptimizedRepresentation(Ksigma);
-      assert Degree(Ksigma) in [2,6];
+    //Ksigma := OptimizedRepresentation(Ksigma);
+      assert Degree(Ksigma) in [2,#Gal/2];
       Kprec:=BaseNumberFieldExtra(DefiningPolynomial(Ksigma),prec);
 
       XK:=ChangeRing(X,Kprec);
@@ -135,14 +140,32 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
       tr,E:=IsNumberField(A2);
       assert tr;
       assert Degree(E) le 2;
-      Append(~endos, <sigma, Ksigma,E>);
+      Append(~endos, <sigma, Ksigma,SquarefreeFactorization(Discriminant(E)) >);
       //Append(~fixedfields,Ksigma);
       //Append(~endo_discs, SquarefreeFactorization(Discriminant(E)));
     //end if;
   end for;
 
+  tup_mu:=[ tup : tup in endos | SquarefreeFactorization(Rationals()!(mu^2)) eq tup[3] ];
+  assert #tup_mu eq 1;
+  sigma_mu := tup_mu[1][1];
+
+  tup_chi:=[ tup : tup in endos | SquarefreeFactorization(Rationals()!(chi^2)) eq tup[3] ];
+  assert #tup_chi eq 1;
+  sigma_chi := tup_chi[1][1];
+
+  assert Gal eq sub< Gal | sigma_mu, sigma_chi >;
 
   AutFull:=Aut(O,mu);
+  wchi:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_chi" ][1];
+  wmu:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_mu" ][1];  
+
+  elts:= [ <sigma_mu^l*sigma_chi^k, wmu^l*wchi^k> : l in [0..#Gal/2-1], k in [0..1] ];
+  galmap_init:=map< Gal -> Domain(AutFull) | elts >;
+  endomorphism_rep := galmap_init*AutFull;
+  assert MapIsHomomorphism(endomorphism_rep : injective:=true);
+
+/*  AutFull:=Aut(O,mu);
   Autmuimage:=[ AutFull(c) : c in Domain(AutFull) ];
   Autmu_alg:= [ SquarefreeFactorization(Rationals()!((g^2)`element)) : g in Autmuimage ];
   Exclude(~Autmu_alg,1);
@@ -175,7 +198,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   endotoautmuO := map< endo_discs -> Autmuimage | d :-> Autmuimage[Index(Autmu_alg,d)] >;
 
   endomorphism_rep:= auttoendo*endotoautmuO;
-  assert MapIsHomomorphism(endomorphism_rep : injective:=true);
+  assert MapIsHomomorphism(endomorphism_rep : injective:=true);*/
 
   return Gal, map, endomorphism_rep, O;
 
