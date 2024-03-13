@@ -48,22 +48,23 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   tr, B, maptoB := IsQuaternionAlgebra(Bmat);
   Obasis:=[ maptoB(b) : b in endosM4 ];
   O:=QuaternionOrder(Obasis);
+  a,b,c,d:=Explode(endosM2);
   //assert IsMaximal(O);
 
 	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
 	P1:=ColumnSubmatrix(BPM,1,2);
+  //precsmall:=5;
 	Latendo:=RealLatticeOfPeriodMatrix(ChangeRing(PeriodMatrix(X),CC));
 
  
   cyclic_module:=[];
   k:=1;
   while #cyclic_module lt 16 do
-    //Q is the O/2O basis element[(a_2,0)] - [(0,0)] after applying Abel-Jacobi 
-    Q:=1/2*P1*AbelJacobi(XR![frootsC[k],0]);
+    //Q is an O/2O basis element coming from the roots of X after applying Abel-Jacobi 
+    Q:=1/2*P1*AbelJacobi(XR![frootsC[k],0],XR`BasePoint);
     //1/2*P1 because this is the change of basis required from the small period matrix lattice to Latendo
     k:=k+1;
     Omod2:=quo(O,2);
-    a,b,c,d:=Explode(endosM2);
     Omod2_eltsCC:=[ (w*a + x*b + y*c + z*d) : w,x,y,z in [0,1] ];
     Omod2_elts:=[ Omod2!(O!(w*Obasis[1] + x*Obasis[2] + y*Obasis[3] + z*Obasis[4])) : w,x,y,z in [0,1] ];
     twotorsion_points:=[ a*Q : a in Omod2_eltsCC ];
@@ -83,8 +84,19 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   Gal,auts,map:=AutomorphismGroup(M);
 
-  enhancedmap:=map< Gal -> Omod2_elts | sigma :-> 
-  Omod2_elts[[ i : i in [1..#twotorsion_points] | IsCoercible(Latendo,Eltseq(RealVector(twotorsion_points[i] - 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[2]),embC),0])))) ][1]] >;
+  map_init:=[];
+  for sigma in Gal do
+    Qsigma := 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0],XR`BasePoint);
+    cyclic_coefficients:=[ a : a in Omod2_eltsCC | IsCoercible(Latendo,Eltseq(RealVector(a*Q - Qsigma))) ];
+    assert #cyclic_coefficients eq 1;
+    index:=Index(Omod2_eltsCC,cyclic_coefficients[1]);
+    a_sigma := Omod2_elts[index];
+    Append(~map_init,<sigma,a_sigma>);
+  end for;
+  
+  enhancedmap:=map< Gal -> Omod2_elts | map_init >;
+  //enhancedmap:=map< Gal -> Omod2_elts | sigma :-> 
+  //Omod2_elts[[ i : i in [1..#twotorsion_points] | IsCoercible(Latendo,Eltseq(RealVector(twotorsion_points[i] - 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[2]),embC),0])))) ][1]] >;
 
   return Gal,map,enhancedmap,O;
  end intrinsic;
