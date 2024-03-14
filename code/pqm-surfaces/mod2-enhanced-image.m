@@ -232,7 +232,8 @@ end intrinsic;
 intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any 
   {return 1. the Galois group of the compositum of the two torsion field and the endomorphism field
           2. A map from the Galois group in S_n to automorphisms of the field
-          3. the enhanced representation as a map from automorphisms of the field to elements of the enhanced semidirect product.}
+          3. the enhanced representation as a map from automorphisms of the field to elements of the enhanced semidirect product.
+          4. the endomorphism ring}
 
   
   Galgrp2,Galmap2,mod2map,O1:=Mod2GaloisMapPQM(X : prec:=prec);
@@ -272,7 +273,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> < restrict_rho_end(sigma), Omod2!(O2!Eltseq(mod2map(sigma)`element)) >  >;
 
   assert MapIsHomomorphism(rho_enhanced : injective:=true);
-  return Galgrp2, Galmap2, rho_enhanced,O;
+  return Galgrp2, Galmap2, rho_enhanced, O2;
 end intrinsic;
   
 
