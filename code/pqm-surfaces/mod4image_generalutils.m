@@ -683,3 +683,50 @@ defining fields of these 4 points as extensions over the 2-torsion field.}
 //    return sub<kerf | mats>;
     return matgrp, basis_4tors, Ls;
 end intrinsic;
+
+intrinsic uptoGconjugacy(G :: Grp, ZK :: SeqEnum) -> SeqEnum
+{cleans up the given list ZK of subgroups of G, by searching and removing G-conjugate subgroups}
+    ZKtrue := [];
+    for K in ZK do
+        Kord := #K;
+        ZKtrue_sub := [x : x in ZKtrue | #x eq Kord];
+        if not exists(temp){Kold : Kold in ZKtrue_sub | IsConjugate(G,K,Kold)} then
+            Append(~ZKtrue,K);
+        end if;
+    end for;
+    return ZKtrue;
+end intrinsic;
+
+intrinsic Mod4EnhancedImage(X :: CrvHyp : prec := 30) -> .
+{returns the image of the mod4 enhanced representation (as a subgroup of GL(4,Z/4) and as a set of enhanced elements).
+TODO: add details.}
+    Z4 := Integers(4);
+    Z2 := Integers(2);
+    Galgrp2, Galmap2, rho_enhanced, O := EnhancedRepresentationMod2PQM(X : prec := prec);
+    boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
+    G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
+    mod2img := sub<G2|[EnhancedElementRecord(rho_enhanced(x))`GL4 : x in Generators(Galgrp2)]>;
+    G4, Omod4cross, aut4 := EnhancedImageGL4(O,nu,4);
+    phi := hom<G4 -> G2 | [ChangeRing(g,Z2) : g in GeneratorsSequence(G4)]>;
+    kerphi := Kernel(phi);
+    printf "Enhanced semi-direct products mod %o have orders %o.\nKernel of the natural reduction has abelian invariants %o.\n", [4,2], [#G4,#G2], AbelianInvariants(kerphi);
+
+    Gl4 := GL(4,Z4);
+    H, basis, Ls := mod4imageovertwotorsionfield(X);
+    assert IsElementaryAbelian(H);
+    printf "Galois images mod %o have orders %o,\nwith abelian invariants of kernel = %o.\n", [4,2], [#mod2img*#H,#mod2img], AbelianInvariants(H);
+    ConjugatesH := Conjugates(Gl4,H);
+    goodHs := [Hconj : Hconj in ConjugatesH | Hconj subset kerphi];
+    goodHs := uptoGconjugacy(G4,goodHs);
+    assert #goodHs ge 1;
+    printf "Found %o possibilities for mod 4 image over 2-torsion field.\n", #goodHs;
+    pullback := mod2img @@ phi;
+    mod4img_possibilities := &cat[Supplements(pullback,kerphi,Hconj) : Hconj in goodHs];
+    printf "Found %o possibilities for mod 4 image over Q.\n", #mod4img_possibilities;
+    if #mod4img_possibilities eq 1 then
+        return mod4img_possibilities[1];
+    else
+        return mod4img_possibilities;
+    end if;
+end intrinsic;
+
