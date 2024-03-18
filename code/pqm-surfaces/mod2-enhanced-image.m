@@ -16,8 +16,6 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   f:=HyperellipticPolynomials(X);
   XR:=RiemannSurface(f,2 : Precision:=prec);
-  assert IsCoercible(XR,[0,0]);
-  XR`BasePoint := XR![0,0];
 
 
 	QA2:=SplittingField(f);
@@ -36,9 +34,12 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   // [(a_2,0)] - [(a_1,0)] will be an O/2O-basis element of A[2](C)
   //after apply the Abel-Jacobi map. assert a1 is rational.
   frootsM:=[ a[1] : a in Roots(ChangeRing(f,M))];
-  assert IsCoercible(Rationals(),frootsM[1]);
   frootsC:=[ Evaluate(a,embC) : a in frootsM ];
-  assert frootsM[1] eq 0;
+  //assert frootsM[1] eq 0;
+
+  assert exists(rat_root){ a : a in frootsM | IsCoercible(Rationals(),a) };
+  assert IsCoercible(XR,[rat_root,0]);
+  XR`BasePoint := XR![rat_root,0];
   
 
   endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
@@ -278,10 +279,5 @@ end intrinsic;
 
 //Rx<x>:=PolynomialRing(Rationals()); fx:=-x^5+4*x^4-10*x^3+8*x^2-2*x; X:=HyperellipticCurve(fx);
 
-   
-/*
-//LIPSCHITZ debugging
- mod2map(Identity(Galgrp2));   //[1 1 0 0]
-*/
 
 
