@@ -96,6 +96,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   end for;
   
   enhancedmap:=map< Gal -> Omod2_elts | map_init >;
+  assert enhancedmap(Id(Gal)) eq Omod2![1,0,0,0];
   //enhancedmap:=map< Gal -> Omod2_elts | sigma :-> 
   //Omod2_elts[[ i : i in [1..#twotorsion_points] | IsCoercible(Latendo,Eltseq(RealVector(twotorsion_points[i] - 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[2]),embC),0])))) ][1]] >;
 
