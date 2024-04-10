@@ -17,16 +17,15 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   f:=HyperellipticPolynomials(X);
   XR:=RiemannSurface(f,2 : Precision:=prec);
 
-
 	QA2:=SplittingField(f);
-  QA2:=OptimizedRepresentation(QA2);
+  QA2:=NumberField(Polredabs(DefiningPolynomial(QA2)));
 	L:=HeuristicEndomorphismFieldOfDefinition(X);
-  L:=OptimizedRepresentation(L);
+  L:=NumberField(Polredabs(DefiningPolynomial(L)));
 
 	M:=Compositum(QA2,L);
-  //Mdef:=DefiningPolynomial(M);
-  //Mdefred:=Polred(Mdef);
-  //M:=NumberField(Mdefred);
+  Mdef:=DefiningPolynomial(M);
+  Mdefred:=Polredabs(Mdef);
+  M:=NumberField(Mdefred);
 	ooplaces:=InfinitePlaces(M);
 	embC:=ooplaces[1];
 
@@ -88,7 +87,8 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   map_init:=[];
   for sigma in Gal do
-    Qsigma := 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0],XR`BasePoint);
+    //Qsigma is what we get when we act on Q by the Galois element sigma. It is still a two torsion point.
+    Qsigma := 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0], XR`BasePoint);
     cyclic_coefficients:=[ a : a in Omod2_eltsCC | IsCoercible(Latendo,Eltseq(RealVector(a*Q - Qsigma))) ];
     assert #cyclic_coefficients eq 1;
     index:=Index(Omod2_eltsCC,cyclic_coefficients[1]);
@@ -118,7 +118,6 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   assert IsSimplifiedModel(X);
   B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);
   assert IsQuaternionAlgebra(B2);
-
 
   endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
   endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
@@ -251,6 +250,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
 
   assert IsSubfield(L,M);
   Galrel:=AutomorphismGroup(RelativeField(L,M));
+  //IsIsomorphic(FixedField(M,[Galmap2(Galrel.2)]),L);
   Galrelquo,quomap:=quo< Galgrp2 | Galrel >;
   assert Galrelquo eq Galgrp_end;
 

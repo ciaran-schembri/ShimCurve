@@ -236,11 +236,11 @@ intrinsic '^'(g::AlgQuatEnhElt,exp::RngIntElt) -> AlgQuatEnhElt
     gelt:=g`element;
     ginv:=Parent(g)!<gelt[1]^-1, (gelt[1]`element)*(gelt[2]^-1)*((gelt[1]`element)^-1) >;
     return ginv;
-  elif exp le 2 then 
+  elif exp le -2 then 
     gelt:=g`element;
     ginv:=<gelt[1]^-1, (gelt[1]`element)*(gelt[2]^-1)*((gelt[1]`element)^-1)>;
     gi:=ginv;
-    for i in [1..exp-1] do 
+    for i in [1..exp+1] do 
       gi:= gi*ginv;
     end for;
     return Parent(g)!gi;
@@ -260,6 +260,19 @@ intrinsic Order(x::AlgQuatProjElt) -> Any
   end for;
   return "infinity";
 end intrinsic;
+
+
+intrinsic Order(x::AlgQuatOrdResElt) -> RngIntElt
+  {order of element}
+  OmodN:=x`parent;
+  for n in [1..12] do 
+    if x^n eq OmodN!1 then 
+      return Integers()!n;
+    end if;
+  end for;
+  return "infinity";
+end intrinsic;
+
 
 intrinsic Order(g::AlgQuatEnhElt) -> Any
   {order of element}
@@ -353,26 +366,37 @@ end intrinsic;
 
 intrinsic IsCoercible(OmodN::AlgQuatOrdRes, x::Any) -> BoolElt, .
 {.}
+  N:=OmodN`quaternionideal;
+  O:=OmodN`quaternionorder;
+  ZmodN:=ResidueClassRing(N);
   if Type(x) eq AlgQuatOrdResElt then
     if Parent(x) eq OmodN then
-      return true, x;
+      x0:=Eltseq(x`element);
+      x1 := [ Integers()!(ZmodN!a) : a in x0 ];
+      return true, OmodNElement(OmodN,O!x1);
     else
       return false, "Illegal Coercion";
     end if;
   elif Type(x) eq AlgQuatOrdElt then
-    if Parent(x) eq OmodN`quaternionorder then 
-      return true,OmodNElement(OmodN,x);
+    if Parent(x) eq O then 
+      x0:=Eltseq(x);
+      x1 := [ Integers()!(ZmodN!a) : a in x0 ];
+      return true, OmodNElement(OmodN,O!x1);
     else 
       return false, "Illegal Coercion";
     end if;
   elif Type(x) eq AlgQuatElt then 
     if x in OmodN`quaternionorder then 
-      return true, OmodNElement(OmodN,(OmodN`quaternionorder)!x);
+      x0:=Eltseq(O!x);
+      x1 := [ Integers()!(ZmodN!a) : a in x0 ];
+      return true, OmodNElement(OmodN,O!x1);
     else 
       return false, "Illegal Coercion";  
     end if;  
-  elif IsCoercible(OmodN`quaternionorder,x) then 
-    return true, OmodNElement(OmodN,(OmodN`quaternionorder)!x);
+  elif IsCoercible(O,x) then 
+      x0:=Eltseq(O!x);
+      x1 := [ Integers()!(ZmodN!a) : a in x0 ];
+      return true, OmodNElement(OmodN,O!x1);
   else
     return false, "Illegal Coercion";
   end if;

@@ -743,6 +743,53 @@ end intrinsic;
 
 
 
+
+
+intrinsic EnhancedPermutationRepresentationMod2(O::AlgQuatOrd,mu::AlgQuatElt) -> Any
+  {return the permutation representation Autmu(O) \ltimes (O/N)^x -> S_n}
+  
+  Omod2_elements := Setseq(Set(quo(O,2)));
+  Omod2_units := [ a : a in Omod2_elements | IsUnit(a) ];
+
+  autmuO := Aut(O,mu);
+  autmuOelts := [ autmuO(x) : x in Domain(autmuO) ];
+
+  Oenh:=EnhancedSemidirectProduct(O : N:=2);
+  enhanced_elements:= [ Oenh!<a,b> : a in autmuOelts, b in Omod2_units ];
+  assert #Set(enhanced_elements) eq #enhanced_elements;
+  enhanced_elements := Set(enhanced_elements);
+  enhanced_elements := SetToIndexedSet(enhanced_elements);
+
+  n:=#enhanced_elements;
+  SymX:=Sym(enhanced_elements);
+  permrep := map< enhanced_elements -> SymX | g :-> SymX![ g*x : x in enhanced_elements ] >; 
+
+  permrep_elts:= [ permrep(g) : g in enhanced_elements ];
+  Gperm:= sub< SymX | permrep_elts >;
+
+  idG := Oenh!<1, [1,0,0,0]>;
+  embedG := map< enhanced_elements -> Gperm | g :-> Gperm!permrep(g), p :-> Image(p,idG) >;
+
+  return embedG;
+end intrinsic;
+
+
+/*
+  subsGperm:=Subgroups(Codomain(Gperm));
+  subsGpermD4 := [ subs : subs in subsGperm | GroupName(subs`subgroup) eq "D4" ]; 
+  D4enh:=[ [ <Order(p), Inverse(Gperm)(p)> : p in Set(sub`subgroup) ] : sub in subsGpermD4 ];
+
+
+  Genh,mapenh,rho_enh:=EnhancedRepresentationMod2PQM(X);
+  rho2_elts:=[ a : a in ]
+
+
+EnumerateHmod2(O::AlgQuatOrd,mu::AlgQuatElt,N::RngIntElt) -> Any
+  {return the subgroups of the enhanced semidirect product with N=2}
+
+
+*/
+
 intrinsic Print(elt::AlgQuatOrdResElt)
 {.}
   printf "%o", elt`element;
