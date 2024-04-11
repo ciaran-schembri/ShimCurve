@@ -37,7 +37,7 @@ intrinsic OmodNElement(OmodN::AlgQuatOrdRes, x::AlgQuatOrdElt) -> AlgQuatOrdResE
   elt`element := x;
   elt`parent := OmodN;
   
-  return OmodN!elt;
+  return elt;
 end intrinsic;
 
 intrinsic ElementModuloScalars(BxmodFx::AlgQuatProj, x::AlgQuatElt) -> AlgQuatProjElt
@@ -204,8 +204,13 @@ intrinsic '^'(x::AlgQuatOrdResElt,exp::RngIntElt) -> AlgQuatOrdResElt
   OmodN:=Parent(x);
 
   x0:=x`element;
-
-  return OmodN!(x0^exp);
+  if exp ge 0 then 
+    return OmodN!(x0^exp);
+  else 
+    order := Order(x);
+    xinv := OmodN!(x0^(order-1));
+    return &*[ xinv : i in [1..-exp] ];
+  end if;
 end intrinsic;
 
 
