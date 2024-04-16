@@ -107,7 +107,9 @@ intrinsic 'eq'(OmodN1::AlgQuatOrdRes,OmodN2::AlgQuatOrdRes) -> BoolElt
   N1:=OmodN1`quaternionideal;
   N2:=OmodN2`quaternionideal;
 
-  if O1 eq O2 and N1 eq N2 then 
+  if StandardForm(QuaternionAlgebra(O1)) eq StandardForm(QuaternionAlgebra(O2))
+    and [ Eltseq(b) : b in Basis(O1) ] eq [ Eltseq(b) : b in Basis(O2) ]
+     and N1 eq N2 then
     return true;
   else 
     return false;
@@ -121,7 +123,8 @@ intrinsic 'eq'(BxmodFx1::AlgQuatProj,BxmodFx2::AlgQuatProj) -> BoolElt
   B1:=BxmodFx1`quaternionalgebra;
   B2:=BxmodFx2`quaternionalgebra;
 
-  if B1 eq B2 then 
+  if StandardForm(B1) eq StandardForm(B2)
+    and BaseRing(B1) eq BaseRing(B2) then
     return true;
   else 
     return false;
@@ -138,7 +141,9 @@ intrinsic 'eq'(Ocirc1::AlgQuatEnh,Ocirc2::AlgQuatEnh) -> BoolElt
   R1:=Ocirc1`basering;
   R2:=Ocirc2`basering;
 
-  if O1 eq O2 and R1 eq R2 then 
+  if StandardForm(QuaternionAlgebra(O1)) eq StandardForm(QuaternionAlgebra(O2))
+    and [ Eltseq(b) : b in Basis(O1) ] eq [ Eltseq(b) : b in Basis(O2) ]
+    and R1 eq R2 then
     return true;
   else 
     return false;
@@ -239,11 +244,11 @@ intrinsic '^'(g::AlgQuatEnhElt,exp::RngIntElt) -> AlgQuatEnhElt
     return gi;
   elif exp eq -1 then 
     gelt:=g`element;
-    ginv:=Parent(g)!<gelt[1]^-1, (gelt[1]`element)*(gelt[2]^-1)*((gelt[1]`element)^-1) >;
+    ginv:=Parent(g)!<gelt[1]^-1, (gelt[1]`element)*((gelt[2]^-1)`element)*((gelt[1]`element)^-1) >;
     return ginv;
   elif exp le -2 then 
     gelt:=g`element;
-    ginv:=<gelt[1]^-1, (gelt[1]`element)*(gelt[2]^-1)*((gelt[1]`element)^-1)>;
+    ginv:=Parent(g)!<gelt[1]^-1, (gelt[1]`element)*((gelt[2]^-1)`element)*((gelt[1]`element)^-1) >;
     gi:=ginv;
     for i in [1..exp+1] do 
       gi:= gi*ginv;
