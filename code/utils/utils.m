@@ -158,14 +158,14 @@ end intrinsic;
 
  
 
-intrinsic MapIsHomomorphism(AutmuO::. : injective:=true) -> BoolElt
-  {Check whether the map AutmuO : C -> B^x/Q^x is an injective homomorphism}
-  for x,y in Domain(AutmuO) do 
-    if not(AutmuO(x*y) eq AutmuO(x)*AutmuO(y)) then 
+intrinsic MapIsHomomorphism(f::Map : injective:=false) -> BoolElt
+  {Check whether the map f: X --> Y is a homomorphism. Set injective := true to determine if it is also injective}
+  for x,y in Domain(f) do 
+    if not(f(x*y) eq f(x)*f(y)) then 
       return false;
     end if;
     if injective eq true then 
-      if ((AutmuO(x) eq AutmuO(y)) and (x ne y)) then 
+      if ((f(x) eq f(y)) and (x ne y)) then 
         return false;
       end if;
     end if;

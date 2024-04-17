@@ -5,13 +5,18 @@ CC:=ComplexField(prec);
 f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
 X:=HyperellipticCurve(f);
 N:=2;
+
+GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X);
   
 QA2:=SplittingField(f);
 L:=HeuristicEndomorphismFieldOfDefinition(X);
 assert Degree(L) eq 4;
 assert IsSubfield(L,QA2);
 
-GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X);
+M:=Domain(mapM(GalM.1));
+JM:=Jacobian(ChangeRing(X,M));
+T2,J2:=TwoTorsionSubgroup(JM);
+
 assert IsMaximal(O);
 tr,mu:=HasPolarizedElementOfDegree(O,1);
 
@@ -48,14 +53,3 @@ end for;
 // conj_elt^-1*rho2*conj_elt = D4grp which is true for the example that works
 
 
-Rx<x>:=PolynomialRing(Rationals());
-f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1;
-XR:=RiemannSurface(f,2 : Precision:=prec);
-//We change the base point
-oldbasepoint := XR`BasePoint;
-XR`BasePoint := XR![-1,0];
-//The Abel Jacobi should give the 0 element but it doesn't because its the minus of the output with the old basepoint
-AbelJacobi(XR![-1,0]); 
-assert AbelJacobi(XR![-1,0]) eq -AbelJacobi(XR![-1,0], oldbasepoint); 
-//We have to the specify the new base point still 
-AbelJacobi(XR![-1,0],XR`BasePoint); 

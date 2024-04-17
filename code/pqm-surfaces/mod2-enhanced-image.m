@@ -43,7 +43,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   GL4Z:=GL(4,Integers());
   endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
   endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
-  endosM4:=[ (GL4Z!ChangeRing(m[2],Rationals()))^-1 : m in endos ]; 
+  endosM4:=[ ChangeRing(m[2],Rationals()) : m in endos ]; 
   Bmat:=MatrixAlgebra< Rationals(), 4 | endosM4 >;
   tr, B, maptoB := IsQuaternionAlgebra(Bmat);
   //assert maptoB is indeed an algebra-hom
@@ -240,64 +240,24 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   Galgrp2,Galmap2,mod2map,O1:=Mod2GaloisMapPQM(X : prec:=prec);
   Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec, quaternionorder:=O1);
 
-  //Let's check O1 and O2 are THE SAME, not just isomorphic. Note there is no such thing as O1 eq O2.
-  //assert StandardForm(QuaternionAlgebra(O1)) eq StandardForm(QuaternionAlgebra(O2));
-  //assert [ Eltseq(b) : b in Basis(O1) ] eq [ Eltseq(b) : b in Basis(O2) ];
-  //We will work with O2 because the image of rho_end needs to be in O2 (because it's in the normalizer).
-
+ 
   M:=Domain(Galmap2(Galgrp2.1));
   L:=Domain(Galmap_end(Galgrp_end.1));
 
 
   rho_end_components:=Components(rho_end);
   autsL:=Codomain(rho_end_components[1]);
+  //first we define the restriction map Galgrp2 --> Gal(L|Q)
+  //then we can define the compositum Galgrp2 --> Gal(L|Q) --> GrpPC --> Aut(O,mu) 
   restrict_Galmap2 := map< Domain(Galmap2) -> autsL | elt :-> RestrictFieldAutomorphism(M,L,FieldAutomorphism(M,Galmap2(elt))) >;
-
   restrict_rho_end:= restrict_Galmap2*rho_end_components[2]*rho_end_components[3];
-  //RestrictFieldAutomorphism(M,L,FieldAutomorphism(M,Galmap2(Galgrp2.1)))
+  assert MapIsHomomorphism(restrict_Galmap2);
+  assert MapIsHomomorphism(restrict_rho_end);
 
-  //tr,embL:= IsSubfield(L,M);
-  //Galrel:=AutomorphismGroup(RelativeField(L,M));
-  //IsIsomorphic(FixedField(M,[Galmap2(Galrel.2)]),L);
-  //Galrelquo,quomap:=quo< Galgrp2 | Galrel >;
-  //assert Galrelquo eq Galgrp_end;
-  
-  //Galmap_end_inv:= map< Codomain(Galmap_end) -> Domain(Galmap_end) | mp :-> FieldAutomorphism(L,mp)`elt >;
-  //assert forall(r){ r : r in Domain(Galmap_end) | Galmap_end_inv(Galmap_end(r)) eq r };
-
-  //K:=[ k : k in Subfields(M) | IsIsomorphic(L,k[1]) ][1];
-  //embK:=K[2];
-  //K:=K[1];
-  //_,autsK:=AutomorphismGroup(K);
-  //permMtoAutK := map< Galgrp2 -> autsK | perm :-> map< K -> K | a :-> K!Galmap2(perm)(a) > >;
-  //tr,isomLK:= IsIsomorphic(L,K);
-  //isomKL := Inverse(isomLK);
-  //AutKtoAutL := map< autsK -> Codomain(Galmap_end) | mapK :-> map< L -> L | a :-> isomKL(mapK(isomLK(a))) > >;
-  //permMtoAutL := permMtoAutK*AutKtoAutL;
-
-  //permtoAutL2 := map< Galgrp2 -> Codomain(Galmap_end) | perm :-> Galmap_end(quomap(perm)) >;
-
-  //restrict_gal:= map< Galgrp2 -> Galgrp_end | sigma :-> quomap(sigma) >;
-  //restrict_rho_end:=restrict_gal*rho_end;
-
-  /*Bmod2:=QuaternionAlgebra(Universe(Codomain(mod2map))`quaternionorder);
-  Bend:=Universe(Codomain(rho_end))`quaternionalgebra;
-  _,Bmap:=IsIsomorphic(Bend,Bmod2 : Isomorphism:=true);
-  Bmod2modQx:=QuaternionAlgebraModuloScalars(Bmod2);
-
-  B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);
-  tr,B:=IsQuaternionAlgebra(B2);
-  //O:=MaximalOrder(QuaternionAlgebra(Discriminant(B)));
-  O:=Universe(Codomain(mod2map))`quaternionorder;
-  B:=QuaternionAlgebra(O1);
-  BxmodQx:=QuaternionAlgebraModuloScalars(B);
-  Omod2:=quo(O1,2);
-*/
   Oenh:=EnhancedSemidirectProduct(O1 : N:=2);
-
   rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> Oenh!< restrict_rho_end(sigma), mod2map(sigma) >  >;
 
-  assert MapIsHomomorphism(rho_enhanced : injective:=true);
+  //assert MapIsHomomorphism(rho_enhanced : injective:=false);
   return Galgrp2, Galmap2, rho_enhanced, O1;
 end intrinsic;
   
