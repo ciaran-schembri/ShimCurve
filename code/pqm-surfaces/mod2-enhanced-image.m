@@ -1,7 +1,7 @@
 
 
 intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any 
-  {Given X/F such that Jac(X) is a PQM surface (O maximal for now), the 2-torsion 
+  {Given X/F such that Jac(X) is a PQM surface, the 2-torsion 
   A[2] is free of rank 1 as an O/2-module. Let Q be an O/2-basis element. 
   Then we can write Q^sigma = a_sigma * Q for any sigma \in GalF. We return the map 
             GalF --> (O/2)^x,   sigma |--> a_sigma   
@@ -24,10 +24,11 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
 	M:=Compositum(QA2,L);
   Mdef:=DefiningPolynomial(M);
-  Mdefred:=Polredabs(Mdef);
+  Mdefred:=Polredabs(Polredbest(Mdef));
   M:=NumberField(Mdefred);
 	ooplaces:=InfinitePlaces(M);
 	embC:=ooplaces[1];
+  Gal,auts,map:=AutomorphismGroup(M);
 
   //These are the roots a_i of the hyperelliptic polynomial
   // [(a_2,0)] - [(a_1,0)] will be an O/2O-basis element of A[2](C)
@@ -35,6 +36,16 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   frootsM:=[ a[1] : a in Roots(ChangeRing(f,M))];
   frootsC:=[ Evaluate(a,embC) : a in frootsM ];
   //assert frootsM[1] eq 0;
+
+  //This shows that the action of Gal on frootsM is a RIGHT action.
+  assert forall(elt){ <g,h,r> : g,h in Gal, r in frootsM | map(h)(map(g)(r)) eq map(g*h)(r) };
+  assert exists(elt){ <g,h,r> : g,h in Gal, r in frootsM | map(h)(map(g)(r)) ne map(h*g)(r) };
+  //Let's make a Gset out of the roots:
+  frootsMset:=Set(frootsM);
+  assert #frootsMset eq #frootsM;
+  Gmap := map< CartesianProduct(frootsMset,Gal) -> frootsMset | x :-> map(x[2])(x[1]) >;
+  Galaction:=GSet(Gal,frootsMset,Gmap); 
+  //assert forall(elt){ <g,h,r> : g,h in Gal, r in Galaction | Image(g,Galaction,r) eq map(g*h)(r) };
 
   assert exists(rat_root){ a : a in frootsM | IsCoercible(Rationals(),a) };
   assert IsCoercible(XR,[rat_root,0]);
@@ -55,10 +66,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   a,b,c,d:=Explode(endosM2);
   OtoM2C := map< O -> KMatrixSpace(CC,2,2) | a :-> &+[ Eltseq(O!a)[i]*endosM2[i] : i in [1..4] ] >;
   assert forall(e){ Basis(O)[i] : i in [1..4] | OtoM2C(Basis(O)[i]) eq endosM2[i] };
-  //assert IsMaximal(O);
+  //assert forall(e) { [b1,b2] : b1,b2 in Obasis | (OtoM2C(b1*b2) eq OtoM2C(b1)*OtoM2C(b2)) and (OtoM2C(b1+b2) eq OtoM2C(b1) + OtoM2C(b2)) };
 
   //AbelJacobi() uses BPM = BigPeriodMatrix whereas the endomorphisms package uses PM = PeriodMatrix
-  //
   PM := ChangeRing(PeriodMatrix(X),CC);
 	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
 	P1:=ColumnSubmatrix(BPM,1,2);
@@ -102,7 +112,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //cyclic_module := [ twotorsion_points[i] : i in [1..#twotorsion_points] 
     //| not(exists(e){ twotorsion_points[j] : j in [1..#twotorsion_points] | j lt i and IsCoercible(Latendo,Eltseq(twotorsion_points_real[i]-twotorsion_points_real[j])) }) ];
 
-  Gal,auts,map:=AutomorphismGroup(M);
+
 
   map_init:=[];
   for sigma in Gal do
@@ -159,6 +169,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   GalL,auts,GalLmap:=AutomorphismGroup(L);
   autsL:=[ FieldAutomorphism(L,phi) : phi in Automorphisms(L) ];
   //assert GroupName(Gal) eq "C2^2";
+  assert IsAbelian(GalL); //because there might be an issue with automorphisms being the opposite group
 
   AutFull:=Aut(O,mu);
   wchi:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_chi" ][1];
@@ -178,6 +189,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   tr,muchi:=IsTwisting(O,mu);
   chi:=muchi[2];
+  assert Parent(AutFull(wchi))!chi eq AutFull(wchi);
   
   cycsubs_init := [ H`subgroup : H in Subgroups(GalL : IsCyclic:=true) | H`order in [2,#GalL/2] ]; 
   cycsubs := [ H : H  in cycsubs_init | forall(e){ G : G in Exclude(cycsubs_init,H) | H notin [ N`subgroup : N in Subgroups(G) ] } ];
@@ -219,6 +231,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   assert GalL eq sub< GalL | sigma_mu, sigma_chi >;
 
+  //MAGMA composes from left to right, need to think about what it means for this map!!
   elts:= [ <autsL!(aut_mu^l*aut_chi^k), wmu^l*wchi^k> : l in [0..#GalL/2-1], k in [0..1] ];
   galmap_init:=map< autsL -> Domain(AutFull) | elts >;
   GalLmp:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
@@ -257,7 +270,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   Oenh:=EnhancedSemidirectProduct(O1 : N:=2);
   rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> Oenh!< restrict_rho_end(sigma), mod2map(sigma) >  >;
 
-  //assert MapIsHomomorphism(rho_enhanced : injective:=false);
+  assert MapIsHomomorphism(rho_enhanced : injective:=false);
   return Galgrp2, Galmap2, rho_enhanced, O1;
 end intrinsic;
   
