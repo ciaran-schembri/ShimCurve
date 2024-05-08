@@ -70,13 +70,16 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   //AbelJacobi() uses BPM = BigPeriodMatrix whereas the endomorphisms package uses PM = PeriodMatrix
   PM := ChangeRing(PeriodMatrix(X),CC);
+  printf "PM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(PM), NumberOfColumns(PM), PM;
 	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
+  printf "BPM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(BPM), NumberOfColumns(BPM), BPM;
 	P1:=ColumnSubmatrix(BPM,1,2);
   P2 := ColumnSubmatrix(BPM,3,2);
   SPM:=ChangeRing(SmallPeriodMatrix(XR),CC);
   //according to the magma documentation SPM = P1^-1*P2, which we assert here.
   assert NumericalRank(SPM - P1^-1*P2 : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0;
 
+  printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
 
   //Check that M*PM = PM*R in the notation of Costa-Mascot-Sijsling-Voight.
   assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0 };
@@ -84,10 +87,36 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 	Latendo:=RealLatticeOfPeriodMatrix(PM);
 
   //The columns of PM and 1/2*BPM are the same, but not necessarily in the same order, which we assert here.
+/*
   PM_cols:=Set(Rows(Transpose(PM)));
   BPM_halfcols:=Set(Rows(Transpose(1/2*BPM)));
   assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
   assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
+*/
+  PM_cols:=Rows(Transpose(PM));
+  BPM_halfcols:=Rows(Transpose(1/2*BPM));
+  assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
+/*
+  swap_mat := Matrix(Integers(),4,4,[Coordinates(Latendo!Eltseq(RealVector(col))) : col in BPM_halfcols])^-1;
+  printf "The column swapping matrix relating PeriodMatrix PM and BigPeriodMatrix BPM is %o\n", swap_mat;
+  swap_mat_CC := ChangeRing(swap_mat,CC);
+  printf "The difference between suitably adjusted PeriodMatrix PM and BigPeriodMatrix is %o\nMust be near zero\n", PM*swap_mat_CC-1/2*BPM;
+  newendosM4 := [swap_mat*endosM4[i]*swap_mat^-1 : i in [1..#endosM4]];
+  print endosM4;
+  print newendosM4;
+  print [x in Bmat : x in newendosM4];
+  newendosM2 := [&+[Eltseq(O!maptoB(Bmat!newendosM4[i]))[j]*endosM2[j] : j in [1..4]] : i in [1..4]];
+  OtoM2C := map< O -> KMatrixSpace(CC,2,2) | a :-> &+[ Eltseq(O!a)[i]*newendosM2[i] : i in [1..4] ] >;
+  assert forall(e){ Basis(O)[i] : i in [1..4] | OtoM2C(Basis(O)[i]) eq newendosM2[i] };
+  printf "Modified OtoM2C to work with BigPeriodMatrix\n";
+*/
+  S := 1/2*ColumnSubmatrix(PM,1,2)^-1*ColumnSubmatrix(BPM,1,2);
+  printf "The GL(2,C) matrix relating PeriodMatrix PM and half of BigPeriodMatrix BPM is %o\n", S;
+  printf "The difference between suitably adjusted PeriodMatrix PM and half of BigPeriodMatrix is %o\nMust be near zero\n", S*PM-1/2*BPM;
+  newendosM2 := [S*endosM2[i]*S^-1 : i in [1..#endosM2]];
+  OtoM2C := map< O -> KMatrixSpace(CC,2,2) | a :-> &+[ Eltseq(O!a)[i]*newendosM2[i] : i in [1..4] ] >;
+  assert forall(e){ Basis(O)[i] : i in [1..4] | OtoM2C(Basis(O)[i]) eq newendosM2[i] };
+  printf "Modified OtoM2C to work with BigPeriodMatrix\n";
 
   Omod2:=quo(O,2);
   coefs := [ [w,x,y,z] : w,x,y,z in [0,1] ];
