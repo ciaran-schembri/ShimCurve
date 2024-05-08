@@ -72,6 +72,11 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   PM := ChangeRing(PeriodMatrix(X),CC);
 	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
 	P1:=ColumnSubmatrix(BPM,1,2);
+  P2 := ColumnSubmatrix(BPM,3,2);
+  SPM:=ChangeRing(SmallPeriodMatrix(XR),CC);
+  //according to the magma documentation SPM = P1^-1*P2, which we assert here.
+  assert NumericalRank(SPM - P1^-1*P2 : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0;
+
 
   //Check that M*PM = PM*R in the notation of Costa-Mascot-Sijsling-Voight.
   assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0 };
