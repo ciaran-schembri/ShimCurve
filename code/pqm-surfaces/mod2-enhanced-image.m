@@ -76,7 +76,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 	P1:=ColumnSubmatrix(BPM,1,2);
   P2 := ColumnSubmatrix(BPM,3,2);
   SPM:=ChangeRing(SmallPeriodMatrix(XR),CC);
-  //according to the magma documentation SPM = P1^-1*P2, which we assert here.
+  //according to the magma documentation SPM = P1^-1*P2, which we assert here. Note BPM = [ P1 P2 ]
   assert NumericalRank(SPM - P1^-1*P2 : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0;
 
   printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
@@ -87,12 +87,14 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 	Latendo:=RealLatticeOfPeriodMatrix(PM);
 
   //The columns of PM and 1/2*BPM are the same, but not necessarily in the same order, which we assert here.
-/*
+  //Infact if 1/2BPM = [ S1 S2 ] then PM = [ S2 S1 ].
+  assert NumericalRank(2*PM - HorizontalJoin(P2,P1) : Epsilon:=RealField(prec)!10^(-Floor(prec/2))) eq 0;
+
   PM_cols:=Set(Rows(Transpose(PM)));
   BPM_halfcols:=Set(Rows(Transpose(1/2*BPM)));
   assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
   assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
-*/
+
   PM_cols:=Rows(Transpose(PM));
   BPM_halfcols:=Rows(Transpose(1/2*BPM));
   assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
