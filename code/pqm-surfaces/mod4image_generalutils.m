@@ -120,7 +120,7 @@ TODO: add details.}
     QQ := Rationals();
     CC := ComplexField(prec);
     Z2 := Integers(2);
-    G2X := mod2image(X);
+    G2X := ChangeRing(mod2image(X),Z2);
 
     endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
     endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
@@ -133,19 +133,21 @@ TODO: add details.}
 
     boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
     G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
-
-    Gl4 := GL(4,Z2);
-    conjs_G2X := [H : H in Conjugates(Gl4,G2X) | H subset Omod2cross];
-    printf "There are %o GL(4)-conjugates of the mod-2 image, that lie inside Omod2cross.\n", #conjs_G2X;
-
     printf "Index of Omod2cross in EnhancedSemidirectProduct is %o.\n", Index(G2,Omod2cross);
 
-    Endfield := SplittingField(HeuristicEndomorphismFieldAsSplittingField(X));
+    Gl4 := GL(4,Z2);
+    conjs_G2X := [H : H in Conjugates(Gl4,G2X) | H subset G2];
+    conjs_G2X := uptoGconjugacy(G2,conjs_G2X);
+    printf "There are %o GL(4)-conjugates of the mod-2 image, that lie inside EnhancedSemidirectProduct.\n", #conjs_G2X;
+
+    EndfieldGalgrp, Endfieldpols := HeuristicEndomorphismFieldAsSplittingField(X);
+    Endfield := SplittingField(Endfieldpols);
     printf "Degree of Endomorphism field is %o.\n", Degree(Endfield);
     fX := HyperellipticPolynomials(SimplifiedModel(X));
     K2 := SplittingField(fX);
     printf "Degree of 2-torsion field is %o.\n", Degree(K2);
-    ind := Degree(Endfield, Endfield meet K2);
+//    ind := Degree(Endfield, Endfield meet K2);
+    ind := Degree(SplittingField([ChangeRing(g,K2) : g in Endfieldpols]), K2);
     printf "Degree of compositum over 2-torsion field is %o.\n", ind;
 
     return conjs_G2X;
