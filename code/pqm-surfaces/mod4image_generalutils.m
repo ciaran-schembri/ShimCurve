@@ -114,6 +114,45 @@ intrinsic mod2image(C :: CrvHyp) -> GrpMat
     end if;
 end intrinsic;
 
+intrinsic Mod2EnhancedImage(X :: CrvHyp : prec := 30) -> .
+{returns the image of the mod2 enhanced representation (as a subgroup of GL(4,Z/2) and as a set of enhanced elements).
+TODO: add details.}
+    QQ := Rationals();
+    CC := ComplexField(prec);
+    Z2 := Integers(2);
+    G2X := ChangeRing(mod2image(X),Z2);
+
+    endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
+    endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
+    endosM4:=[ ChangeRing(m[2],QQ) : m in endos ]; 
+    Bmat:=MatrixAlgebra< QQ, 4 | endosM4 >;
+    tr, B, maptoB := IsQuaternionAlgebra(Bmat);
+//    assert forall(b){ [Bmat.u,Bmat.v] : u,v in [1..4] | maptoB(Bmat.u*Bmat.v) eq maptoB(Bmat.u)*maptoB(Bmat.v) };
+    Obasis:=[ maptoB(b) : b in endosM4 ];
+    O:=QuaternionOrder(Obasis : IsBasis:=true);
+
+    boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
+    G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
+    printf "Index of Omod2cross in EnhancedSemidirectProduct is %o.\n", Index(G2,Omod2cross);
+
+    Gl4 := GL(4,Z2);
+    conjs_G2X := [H : H in Conjugates(Gl4,G2X) | H subset G2];
+    conjs_G2X := uptoGconjugacy(G2,conjs_G2X);
+    printf "There are %o GL(4)-conjugates of the mod-2 image, that lie inside EnhancedSemidirectProduct.\n", #conjs_G2X;
+
+    EndfieldGalgrp, Endfieldpols := HeuristicEndomorphismFieldAsSplittingField(X);
+    Endfield := SplittingField(Endfieldpols);
+    printf "Degree of Endomorphism field is %o.\n", Degree(Endfield);
+    fX := HyperellipticPolynomials(SimplifiedModel(X));
+    K2 := SplittingField(fX);
+    printf "Degree of 2-torsion field is %o.\n", Degree(K2);
+//    ind := Degree(Endfield, Endfield meet K2);
+    ind := Degree(SplittingField([ChangeRing(g,K2) : g in Endfieldpols]), K2);
+    printf "Degree of compositum over 2-torsion field is %o.\n", ind;
+
+    return conjs_G2X;
+end intrinsic;
+
 QQ := Rationals();
 Invs := SFAElementary(QQ);
 P5 := PolynomialRing(QQ,5);
@@ -748,16 +787,12 @@ corresponding quotient. There may be some repeats.}
 				Append(~ans,C);
 			end if;
 		end if;
-/*
-		if Index(comps,C) mod 100 eq 0 then
-			print Index(comps,C);
-		end if;
-*/
+//		if Index(comps,C) mod 100 eq 0 then print Index(comps,C); end if;
 	end for;
 	return ans;
 end intrinsic;
 
-intrinsic PossibilitiesFromFrobSampling(C :: CrvHyp : CCsshowingup := [], possibs := [], possible_CCstats := [], mod2img := sub<G|>, mod4imgover2fld := sub<G|>, primesstart := 4, primesend := 300, list_of_counts := [0/1 : i in [1..#CCs]]) -> SeqEnum
+intrinsic PossibilitiesFromFrobSampling(C :: CrvHyp, mod2img :: GrpMat, mod4imgover2fld :: GrpMat : CCsshowingup := [], possibs := [], possible_CCstats := [], primesstart := 4, primesend := 100, list_of_counts := [0/1 : i in [1..#CCs]]) -> SeqEnum
 {returns the list of possibilities for mod-4 Galois image for the Jacobian of the given genus 2 curve C,
 based on sampling Frobenius matrices for primes upto a given bound.}
     badprimes := &*BadPrimes(C)*2;
@@ -772,29 +807,25 @@ based on sampling Frobenius matrices for primes upto a given bound.}
                     assert exists(iii){i : i in [1..#CCs] | IsConjugate(G,CCs[i][3],frobpmat)};
 //        		    print primesstart, p, iii;
                     list_of_counts[iii] := list_of_counts[iii]+1;
-                    if not iii in CCsshowingup then
-                        Append(~CCsshowingup,iii);
-                    end if;
+                    if not iii in CCsshowingup then Append(~CCsshowingup,iii); end if;
                 end if;
                 primesstart := primesstart + 1;
             end while;
 
-            Norm_mod2img := (#mod2img eq 1) select G2 else Normalizer(G2,mod2img);
+            Norm_mod2img := Normalizer(G2,mod2img);
             Norm_mod2img_inv := Norm_mod2img @@ f;
             BigG := GL(4,Integers(4));
             if #mod4imgover2fld ne 1 then assert IsElementaryAbelian(mod4imgover2fld); end if;
-            conjugates_mod4imgover2fld := Conjugates(BigG, mod4imgover2fld);
-            printf "There are %o conjugates inside GL4(Z4) of the mod4 img over Q(A[2])\n", #conjugates_mod4imgover2fld;
+            conjugates_mod4imgover2fld := [H : H in Conjugates(BigG, mod4imgover2fld) | H subset kerf];
+            printf "There are %o GL(4)-conjugates of the mod4 img over Q(A[2]) inside kerf = ker(GSp(4,Z/4) --> GSp(4,Z/2))\n", #conjugates_mod4imgover2fld;
             desired_conjmod4imgover2flds := [];
             kerfconjclasses := {i : i in [1..#CCs] | CCs[i,3] in kerf};
             for H in conjugates_mod4imgover2fld do
-                if H subset kerf then
-                    if not (Set(CCsshowingup) meet kerfconjclasses) subset {classmap(cc[3]) : cc in ConjugacyClasses(H)} then continue; end if;
-                    if exists(ii){i : i in Set(CCsshowingup) meet kerfconjclasses | IsDisjoint(Orbit(G,CCs[i,3]),Set(H))} then continue; end if;
-                    Hconjs := Conjugates(Norm_mod2img_inv,H);
-                    if not Hconjs in desired_conjmod4imgover2flds then
-                        Append(~desired_conjmod4imgover2flds, Hconjs);
-                    end if;
+//                if not (Set(CCsshowingup) meet kerfconjclasses) subset {classmap(cc[3]) : cc in ConjugacyClasses(H)} then continue; end if;
+                if exists(ii){i : i in Set(CCsshowingup) meet kerfconjclasses | IsDisjoint(Orbit(G,CCs[i,3]),Set(H))} then continue; end if;
+                Hconjs := Conjugates(Norm_mod2img_inv,H);
+                if not Hconjs in desired_conjmod4imgover2flds then
+                    Append(~desired_conjmod4imgover2flds, Hconjs);
                 end if;
             end for;
             printf "There are %o possible conjugacy classes of mod4 img over Q(A[2]) inside Normalizer(pi^-1(mod2img))\n", #desired_conjmod4imgover2flds;
@@ -802,53 +833,49 @@ based on sampling Frobenius matrices for primes upto a given bound.}
             all_possibilities := [];
             for Hconjs in desired_conjmod4imgover2flds do
                 H := Random(Hconjs);
-    //			print Set(CCsshowingup);
+//    			print Set(CCsshowingup);
                 lifts := PossibleLifts(mod2img,H,Set(CCsshowingup));
-                printf "Number of computed supplements = %o.\n", #lifts;
+                printf "Number of computed complements = %o.\n", #lifts;
                 for li in lifts do
                     if not IsAConjugateIn(li,all_possibilities) then
-                    Append(~all_possibilities,li);
+                       Append(~all_possibilities,li);
                     end if;
                 end for;
             end for;
             printf "Upto conjugacy = %o\n", #all_possibilities;
-            if #all_possibilities eq 1 then
-            return all_possibilities;
-            end if;
+            if #all_possibilities eq 1 then return all_possibilities; end if;
 
             all_ccstats := [];
             subs_with_ccstat := [];
             for li in all_possibilities do
-    //		ccstat := GassmanDistribution(G, li : CCG := CCs, classmap := classmap);
-            ccstat := GassmanDistribution(G, li : CCG := CCs, classmap := classmap, ordsH := Divisors(#li));
-            if not ccstat in all_ccstats then
-                Append(~all_ccstats,ccstat);
-                Append(~subs_with_ccstat,[li]);
-            else
-                indi := Index(all_ccstats,ccstat);
-                subs_with_ccstat[indi] := subs_with_ccstat[indi] cat [li];
-            end if;
+//                ccstat := GassmanDistribution(G, li : CCG := CCs, classmap := classmap);
+                ccstat := GassmanDistribution(G, li : CCG := CCs, classmap := classmap, ordsH := Divisors(#li));
+                if not ccstat in all_ccstats then
+                    Append(~all_ccstats,ccstat);
+                    Append(~subs_with_ccstat,[li]);
+                else
+                    indi := Index(all_ccstats,ccstat);
+                    subs_with_ccstat[indi] := subs_with_ccstat[indi] cat [li];
+                end if;
             end for;
 
             subs_with_ccstat_GLconjinfo := [];
             for k := 1 to #subs_with_ccstat do
-            subs := subs_with_ccstat[k];
-            temp := [];
-            for l := 1 to #subs do
-                H := subs[l];
-                bool := true;
-                for m := 1 to #temp do
-                if IsConjugate(BigG,H,temp[m][1]) then
-                    temp[m] := temp[m] cat [H];
-                    bool := false;
-                    break;
-                end if;
+                subs := subs_with_ccstat[k];
+                temp := [];
+                for l := 1 to #subs do
+                    H := subs[l];
+                    bool := true;
+                    for m := 1 to #temp do
+                        if IsConjugate(BigG,H,temp[m][1]) then
+                            temp[m] := temp[m] cat [H];
+                            bool := false;
+                            break;
+                        end if;
+                    end for;
+                    if bool then Append(~temp,[H]); end if;
                 end for;
-                if bool then
-                Append(~temp,[H]);
-                end if;
-            end for;
-            Append(~subs_with_ccstat_GLconjinfo,temp);
+                Append(~subs_with_ccstat_GLconjinfo,temp);
             end for;
             possibs := subs_with_ccstat_GLconjinfo;
             possible_CCstats := all_ccstats;
@@ -860,77 +887,69 @@ based on sampling Frobenius matrices for primes upto a given bound.}
     possible_validccs := [allvalidccs(CCstatH) : CCstatH in possible_CCstats];
     skipfrobdistcalc := false;
     for N := primesstart to primesend do
-	if #possibs eq 1 then
-	    skipfrobdistcalc := true;
-	    possibilities := possibs;
-	    break;
-	end if;
-	p := NthPrime(N);
-	if badprimes mod p ne 0 then
-	    frobpmat := frobconjclass(C,p);
-	    assert exists(iii){i : i in [1..#CCs] | IsConjugate(G,CCs[i][3],frobpmat)};
+        if N mod 100 eq 0 then print N; end if;
+        if #possibs eq 1 then
+            skipfrobdistcalc := true;
+            possibilities := possibs;
+            break;
+        end if;
+        p := NthPrime(N);
+        if badprimes mod p eq 0 then continue; end if;
+        frobpmat := frobconjclass(C,p);
+        assert exists(iii){i : i in [1..#CCs] | IsConjugate(G,CCs[i][3],frobpmat)};
 //	    print N, p, iii;
-	    list_of_counts[iii] := list_of_counts[iii]+1;
-	    if not iii in CCsshowingup then
-//		print #possibs, #possible_CCstats;
-		Append(~CCsshowingup,iii);
-		possibs := [possibs[j] : j in [1..#possibs] | iii in possible_validccs[j]];
-		possible_CCstats := [possible_CCstats[j] : j in [1..#possible_CCstats] | iii in possible_validccs[j]];
-		possible_validccs := [possible_validccs[j] : j in [1..#possible_validccs] | iii in possible_validccs[j]];
-	    end if;
-	end if;
-	if N mod 100 eq 0 then
-	    print N;
-	end if;
+        list_of_counts[iii] := list_of_counts[iii]+1;
+        if not iii in CCsshowingup then
+//    		print #possibs, #possible_CCstats;
+            Append(~CCsshowingup,iii);
+            possibs := [possibs[j] : j in [1..#possibs] | iii in possible_validccs[j]];
+            possible_CCstats := [possible_CCstats[j] : j in [1..#possible_CCstats] | iii in possible_validccs[j]];
+            possible_validccs := [possible_validccs[j] : j in [1..#possible_validccs] | iii in possible_validccs[j]];
+        end if;
     end for;
 
     if not skipfrobdistcalc then
-	totalprimes := &+list_of_counts;
-	freqstat := [list_of_counts[i]/totalprimes : i in [1..#list_of_counts]];
-//	totalprimes;
-
-	V := VectorSpace(RealField(),#CCs);
-	localmindists := [];
-	for i := 1 to #possible_CCstats do
-	    mindist := 1;
-	    for j := 1 to #possible_CCstats do
-		if j ne i then
-		    mindist := Minimum(mindist,Norm(V ! possible_CCstats[j] - V ! possible_CCstats[i]));
-		end if;
-	    end for;
-	    Append(~localmindists,mindist/4);
-	end for;
-	print localmindists;
-
-	possibilities := [];
-	errors := [];
-	for i := 1 to #possible_CCstats do
-	    CCstatH := possible_CCstats[i];
-	    err := V ! CCstatH - V ! freqstat;
-	    print i, Norm(err), localmindists[i];
-	    if Norm(err) lt localmindists[i] then
-		Append(~possibilities,possibs[i]);
-		Append(~errors,Norm(err));
-	    end if;
-	end for;
-
-	print #possibilities, #errors;
-	print errors;
+        totalprimes := &+list_of_counts;
+        freqstat := [list_of_counts[i]/totalprimes : i in [1..#list_of_counts]];
+//    	totalprimes;
+        V := VectorSpace(RealField(),#CCs);
+        localmindists := [];
+        for i := 1 to #possible_CCstats do
+            mindist := 1;
+            for j := 1 to #possible_CCstats do
+                if j ne i then mindist := Minimum(mindist,Norm(V ! possible_CCstats[j] - V ! possible_CCstats[i])); end if;
+            end for;
+            Append(~localmindists,mindist/4);
+        end for;
+        print localmindists;
+        possibilities := [];
+        errors := [];
+        for i := 1 to #possible_CCstats do
+            CCstatH := possible_CCstats[i];
+            err := V ! CCstatH - V ! freqstat;
+            print i, Norm(err), localmindists[i];
+            if Norm(err) lt localmindists[i] then
+                Append(~possibilities,possibs[i]);
+                Append(~errors,Norm(err));
+            end if;
+        end for;
+        print #possibilities, #errors;
+        print errors;
     end if;
 
     if #possibilities ne 1 then
-	print "More primes need to be sampled. Sampling more primes...";
-	newprimesstart := Maximum(primesstart,primesend + 1);
-	newprimesend := newprimesstart + 100;
-	return PossibilitiesFromFrobSampling(C : CCsshowingup := CCsshowingup, possibs := possibs, possible_CCstats := possible_CCstats, primesstart := newprimesstart, primesend := newprimesend, list_of_counts := list_of_counts);
+        print "More primes need to be sampled. Sampling more primes...";
+        newprimesstart := Maximum(primesstart,primesend + 1);
+        newprimesend := newprimesstart + 100;
+    	return PossibilitiesFromFrobSampling(C, mod2img, mod4imgover2fld : CCsshowingup := CCsshowingup, possibs := possibs, possible_CCstats := possible_CCstats, primesstart := newprimesstart, primesend := newprimesend, list_of_counts := list_of_counts);
     elif #possibilities[1] gt 1 then
-	print "Sampled data about frobenius cannot distinguish the image upto GL conjugacy uniquely.";
-	print "The image could be one of the following subgroups:";
-//	print possibilities[1];
-//	print "Looking at global data to distinguish between the", #possibilities[1], "possible images...";
-	return distinguish(C,possibilities[1]);
+        print "Sampled data about frobenius cannot distinguish the image upto GL conjugacy uniquely.";
+        print "The image could be one of the following subgroups:";
+//    	print possibilities[1];
+//    	print "Looking at global data to distinguish between the", #possibilities[1], "possible images...";
+        return distinguish(C,possibilities[1]);
     else
-	return possibilities[1][1];
+    	return possibilities[1][1];
     end if;
 end intrinsic;
 
@@ -957,14 +976,35 @@ TODO: add details.}
     goodHs := [Hconj : Hconj in ConjugatesH | Hconj subset kerphi];
     goodHs := uptoGconjugacy(G4,goodHs);
     assert #goodHs ge 1;
-    printf "Found %o possibilities for mod 4 image over 2-torsion field.\n", #goodHs;
+    printf "Found %o possibilities for mod 4 image over 2-torsion field inside enhanced semidirect product.\n", #goodHs;
     pullback := mod2img @@ phi;
-    mod4img_possibilities := &cat[Supplements(pullback,kerphi,Hconj) : Hconj in goodHs];
-    printf "Found %o possibilities for mod 4 image over Q.\n", #mod4img_possibilities;
-    if #mod4img_possibilities eq 1 then
-        return mod4img_possibilities[1];
-    else
-        return mod4img_possibilities;
-    end if;
+    mod4img_possibilities := &cat[Complements(pullback,kerphi,Hconj) : Hconj in goodHs];
+    printf "Found %o possibilities for mod 4 image over Q inside inside enhanced semidirect product.\n", #mod4img_possibilities;
+    if #mod4img_possibilities eq 1 then return mod4img_possibilities[1]; end if;
+
+    G2X := mod2image(X); assert IsConjugate(GL(4,Z2),mod2img,ChangeRing(G2X,Z2));
+    printf "Sampling Frobenius to compute image in GSp(4,Z/4)...\n";
+    ans := PossibilitiesFromFrobSampling(X, G2X, H);
+    printf "Found %o possibilities for mod 4 image over Q inside GSp(4,Z/4).\n", #ans;
+    assert #ans eq 1;
+    ans := ans[1];
+/*
+    f2 := hom<ans -> GL(4,Z2) | [ChangeRing(g,Z2) : g in GeneratorsSequence(ans)]>;
+    ans4over2 := Kernel(f2);
+    AllconjsofansinG4 := [];
+    printf "Trying to find all those GL4-conjugates of the just-found mod 4 image, that lie in the enhanced semidirect product...\n";
+    for Hconj in goodHs do
+        boo, M := IsConjugate(Gl4,ans4over2,Hconj);
+        newans := Conjugate(ans,M);
+        assert Hconj subset newans;
+        AllconjsofansinG4 := AllconjsofansinG4 cat [x : x in Conjugates(Normalizer(Gl4,Hconj),newans) | x subset G4];
+    end for;
+    AllconjsofansinG4_uptoG4conjugacy := uptoGconjugacy(G4,AllconjsofansinG4);
+*/
+    AllconjsofansinG4_uptoG4conjugacy := [x`subgroup : x in Subgroups(G4 : OrderEqual := #ans) | IsConjugate(Gl4,ans,x`subgroup)];
+    printf "Found %o GL4-conjugates of the just-found mod 4 image, lying inside the enhanced semidirect product upto conjugacy\n", #AllconjsofansinG4_uptoG4conjugacy;
+    final := [x : x in AllconjsofansinG4_uptoG4conjugacy | IsConjugate(G2,phi(x),mod2img)];
+    if #final eq 1 then return final[1]; end if;
+    return final;
 end intrinsic;
 
