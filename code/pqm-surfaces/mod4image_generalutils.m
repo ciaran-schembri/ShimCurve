@@ -757,7 +757,7 @@ corresponding quotient. There may be some repeats.}
 	return ans;
 end intrinsic;
 
-intrinsic PossibilitiesFromFrobSampling(C :: CrvHyp, mod2img :: GrpMat, mod4imgover2fld :: GrpMat : CCsshowingup := [], possibs := [], possible_CCstats := [], primesstart := 4, primesend := 300, list_of_counts := [0/1 : i in [1..#CCs]]) -> SeqEnum
+intrinsic PossibilitiesFromFrobSampling(C :: CrvHyp, mod2img :: GrpMat, mod4imgover2fld :: GrpMat : CCsshowingup := [], possibs := [], possible_CCstats := [], primesstart := 4, primesend := 100, list_of_counts := [0/1 : i in [1..#CCs]]) -> SeqEnum
 {returns the list of possibilities for mod-4 Galois image for the Jacobian of the given genus 2 curve C,
 based on sampling Frobenius matrices for primes upto a given bound.}
     badprimes := &*BadPrimes(C)*2;
@@ -955,6 +955,7 @@ TODO: add details.}
     printf "Found %o possibilities for mod 4 image over Q inside GSp(4,Z/4).\n", #ans;
     assert #ans eq 1;
     ans := ans[1];
+/*
     f2 := hom<ans -> GL(4,Z2) | [ChangeRing(g,Z2) : g in GeneratorsSequence(ans)]>;
     ans4over2 := Kernel(f2);
     AllconjsofansinG4 := [];
@@ -965,7 +966,11 @@ TODO: add details.}
         assert Hconj subset newans;
         AllconjsofansinG4 := AllconjsofansinG4 cat [x : x in Conjugates(Normalizer(Gl4,Hconj),newans) | x subset G4];
     end for;
-    final := [x : x in uptoGconjugacy(G4,AllconjsofansinG4) | IsConjugate(G2,phi(x),mod2img)];
+    AllconjsofansinG4_uptoG4conjugacy := uptoGconjugacy(G4,AllconjsofansinG4);
+*/
+    AllconjsofansinG4_uptoG4conjugacy := [x`subgroup : x in Subgroups(G4 : OrderEqual := #ans) | IsConjugate(Gl4,ans,x`subgroup)];
+    printf "Found %o GL4-conjugates of the just-found mod 4 image, lying inside the enhanced semidirect product upto conjugacy\n", #AllconjsofansinG4_uptoG4conjugacy;
+    final := [x : x in AllconjsofansinG4_uptoG4conjugacy | IsConjugate(G2,phi(x),mod2img)];
     if #final eq 1 then return final[1]; end if;
     return final;
 end intrinsic;
