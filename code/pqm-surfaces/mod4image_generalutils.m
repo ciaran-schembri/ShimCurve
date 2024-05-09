@@ -114,6 +114,43 @@ intrinsic mod2image(C :: CrvHyp) -> GrpMat
     end if;
 end intrinsic;
 
+intrinsic Mod2EnhancedImage(X :: CrvHyp : prec := 30) -> .
+{returns the image of the mod2 enhanced representation (as a subgroup of GL(4,Z/2) and as a set of enhanced elements).
+TODO: add details.}
+    QQ := Rationals();
+    CC := ComplexField(prec);
+    Z2 := Integers(2);
+    G2X := mod2image(X);
+
+    endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
+    endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
+    endosM4:=[ ChangeRing(m[2],QQ) : m in endos ]; 
+    Bmat:=MatrixAlgebra< QQ, 4 | endosM4 >;
+    tr, B, maptoB := IsQuaternionAlgebra(Bmat);
+//    assert forall(b){ [Bmat.u,Bmat.v] : u,v in [1..4] | maptoB(Bmat.u*Bmat.v) eq maptoB(Bmat.u)*maptoB(Bmat.v) };
+    Obasis:=[ maptoB(b) : b in endosM4 ];
+    O:=QuaternionOrder(Obasis : IsBasis:=true);
+
+    boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
+    G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
+
+    Gl4 := GL(4,Z2);
+    conjs_G2X := [H : H in Conjugates(Gl4,G2X) | H subset Omod2cross];
+    printf "There are %o GL(4)-conjugates of the mod-2 image, that lie inside Omod2cross.\n", #conjs_G2X;
+
+    printf "Index of Omod2cross in EnhancedSemidirectProduct is %o.\n", Index(G2,Omod2cross);
+
+    Endfield := SplittingField(HeuristicEndomorphismFieldAsSplittingField(X));
+    printf "Degree of Endomorphism field is %o.\n", Degree(Endfield);
+    fX := HyperellipticPolynomials(SimplifiedModel(X));
+    K2 := SplittingField(fX);
+    printf "Degree of 2-torsion field is %o.\n", Degree(K2);
+    ind := Degree(Endfield, Endfield meet K2);
+    printf "Degree of compositum over 2-torsion field is %o.\n", ind;
+
+    return conjs_G2X;
+end intrinsic;
+
 QQ := Rationals();
 Invs := SFAElementary(QQ);
 P5 := PolynomialRing(QQ,5);
@@ -748,11 +785,7 @@ corresponding quotient. There may be some repeats.}
 				Append(~ans,C);
 			end if;
 		end if;
-/*
-		if Index(comps,C) mod 100 eq 0 then
-			print Index(comps,C);
-		end if;
-*/
+//		if Index(comps,C) mod 100 eq 0 then print Index(comps,C); end if;
 	end for;
 	return ans;
 end intrinsic;
@@ -772,14 +805,12 @@ based on sampling Frobenius matrices for primes upto a given bound.}
                     assert exists(iii){i : i in [1..#CCs] | IsConjugate(G,CCs[i][3],frobpmat)};
 //        		    print primesstart, p, iii;
                     list_of_counts[iii] := list_of_counts[iii]+1;
-                    if not iii in CCsshowingup then
-                        Append(~CCsshowingup,iii);
-                    end if;
+                    if not iii in CCsshowingup then Append(~CCsshowingup,iii); end if;
                 end if;
                 primesstart := primesstart + 1;
             end while;
 
-            Norm_mod2img := (#mod2img eq 1) select G2 else Normalizer(G2,mod2img);
+            Norm_mod2img := Normalizer(G2,mod2img);
             Norm_mod2img_inv := Norm_mod2img @@ f;
             BigG := GL(4,Integers(4));
             if #mod4imgover2fld ne 1 then assert IsElementaryAbelian(mod4imgover2fld); end if;
@@ -802,7 +833,7 @@ based on sampling Frobenius matrices for primes upto a given bound.}
                 H := Random(Hconjs);
 //    			print Set(CCsshowingup);
                 lifts := PossibleLifts(mod2img,H,Set(CCsshowingup));
-                printf "Number of computed supplements = %o.\n", #lifts;
+                printf "Number of computed complements = %o.\n", #lifts;
                 for li in lifts do
                     if not IsAConjugateIn(li,all_possibilities) then
                        Append(~all_possibilities,li);
@@ -945,7 +976,7 @@ TODO: add details.}
     assert #goodHs ge 1;
     printf "Found %o possibilities for mod 4 image over 2-torsion field inside enhanced semidirect product.\n", #goodHs;
     pullback := mod2img @@ phi;
-    mod4img_possibilities := &cat[Supplements(pullback,kerphi,Hconj) : Hconj in goodHs];
+    mod4img_possibilities := &cat[Complements(pullback,kerphi,Hconj) : Hconj in goodHs];
     printf "Found %o possibilities for mod 4 image over Q inside inside enhanced semidirect product.\n", #mod4img_possibilities;
     if #mod4img_possibilities eq 1 then return mod4img_possibilities[1]; end if;
 
