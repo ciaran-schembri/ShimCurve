@@ -45,7 +45,6 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   //This shows that the action of Gal on frootsM is a RIGHT action.
   assert forall(elt){ <g,h,r> : g,h in Gal, r in frootsM | map(h)(map(g)(r)) eq map(g*h)(r) };
-  assert exists(elt){ <g,h,r> : g,h in Gal, r in frootsM | map(h)(map(g)(r)) ne map(h*g)(r) };
   //Let's make a Gset out of the roots:
   frootsMset:=Set(frootsM);
   assert #frootsMset eq #frootsM;
@@ -218,7 +217,23 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
       endomorphism_rep := galmap_init*AutFull;
       assert MapIsHomomorphism(endomorphism_rep : injective:=true);
     else
-      return "Galois group is cyclic but not sure what to assign the generator yet";
+      Kprec:=BaseNumberFieldExtra(DefiningPolynomial(L),prec);
+      Kprec:=RationalsExtra(prec);
+      XK:=ChangeRing(X,Kprec);
+      A1,A2,A3:=HeuristicEndomorphismAlgebra(XK);
+      tr,E:=IsNumberField(A2);
+      assert tr;
+      assert Degree(E) le 2;
+      exists(elt){ elt : elt in [wmu,wchi,wmu*wchi] | SquarefreeFactorization(Discriminant(E)) eq SquarefreeFactorization(Rationals()!((AutFull(elt)^2)`element)) };
+
+      sigma_elt := GalL.1;
+      aut_elt:=autsL!FieldAutomorphism(L,GalLmap(sigma_elt));
+      elts:= [ <aut_elt^l, elt^l> : l in [0,1] ];
+      galmap_init:=map< autsL -> Domain(AutFull) | elts >;
+      GalLmap2:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
+      endomorphism_rep := GalLmap2*galmap_init*AutFull;
+
+      return GalL, GalLmap2, endomorphism_rep, O;
     end if;
   end if;
 
@@ -269,11 +284,11 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //MAGMA composes from left to right, need to think about what it means for this map!!
   elts:= [ <autsL!(aut_mu^l*aut_chi^k), wmu^l*wchi^k> : l in [0..#GalL/2-1], k in [0..1] ];
   galmap_init:=map< autsL -> Domain(AutFull) | elts >;
-  GalLmp:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
-  endomorphism_rep := GalLmp*galmap_init*AutFull;
+  GalLmap2:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
+  endomorphism_rep := GalLmap2*galmap_init*AutFull;
   assert MapIsHomomorphism(endomorphism_rep : injective:=true);
 
-  return GalL, GalLmap, endomorphism_rep, O;
+  return GalL, GalLmap2, endomorphism_rep, O;
 
 end intrinsic;
 
@@ -290,7 +305,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
 
  
   M:=Domain(Galmap2(Galgrp2.1));
-  L:=Domain(Galmap_end(Galgrp_end.1));
+  L:=Galmap_end(Galgrp_end.1)`L;
 
 
   rho_end_components:=Components(rho_end);

@@ -1,12 +1,17 @@
 Rx<x>:=PolynomialRing(Rationals());
 //f:=-x^5+4*x^4-10*x^3+8*x^2-2*x; //this one actually works
-f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
-f := 2*x^6+9*x^5+6*x^4+2*x^3-6*x-4; //this one doesn't have a rational root.
+//f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
+//f := Rx![ -6984, -1164, 11058, -19303, 291, 5529, 873 ]; //this one doesn't have a rational root but has 2-torsion. it also works fine
+//f:=Rx![ 136802592, 451303170, 319102161, -127768885, -86012034, -23768880, -39403728 ]; this one also works but image only has size 8.
+f:=3*x^6+23*x^5-55*x^3+31*x-9;
+
 prec:=30;
 CC:=ComplexField(prec);
 X:=HyperellipticCurve(f);
+TwoTorsionSubgroup(Jacobian(X));
 N:=2;
 GalM,map2,f2:=Mod2GaloisMapPQM(X);
+GalM;
 f2;
 
 GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X);
