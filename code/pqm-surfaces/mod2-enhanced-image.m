@@ -16,6 +16,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   f:=HyperellipticPolynomials(X);
   XR:=RiemannSurface(f,2 : Precision:=prec);
+  //assert that the basepoint is of the form (x,0)
+  assert Coordinates(XR`BasePoint)[2] eq 0;
+
 
 	QA2:=SplittingField(f);
   QA2:=NumberField(Polredabs(DefiningPolynomial(QA2)));
@@ -27,6 +30,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   Mdefred:=Polredabs(Polredbest(Mdef));
   M:=NumberField(Mdefred);
 	ooplaces:=InfinitePlaces(M);
+  //CAREFUL: we choose an embedding here which affects the final output.
 	embC:=ooplaces[1];
   Gal,auts,map:=AutomorphismGroup(M);
 
@@ -35,7 +39,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //after apply the Abel-Jacobi map. assert a1 is rational.
   frootsM:=[ a[1] : a in Roots(ChangeRing(f,M))];
   frootsC:=[ Evaluate(a,embC) : a in frootsM ];
-  //assert frootsM[1] eq 0;
+  //Let's find which element x0 of frootsM corresponds to the basepoint (x0,0) of the Riemann surface. 
+  exists(x0){ z : z in frootsM | Abs(Evaluate(z,embC)-Coordinates(XR`BasePoint)[1]) lt RealField(20)!0.00000000000000001 };
+  
 
   //This shows that the action of Gal on frootsM is a RIGHT action.
   assert forall(elt){ <g,h,r> : g,h in Gal, r in frootsM | map(h)(map(g)(r)) eq map(g*h)(r) };
@@ -47,9 +53,11 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   Galaction:=GSet(Gal,frootsMset,Gmap); 
   //assert forall(elt){ <g,h,r> : g,h in Gal, r in Galaction | Image(g,Galaction,r) eq map(g*h)(r) };
 
-  assert exists(rat_root){ a : a in frootsM | IsCoercible(Rationals(),a) };
-  assert IsCoercible(XR,[rat_root,0]);
-  XR`BasePoint := XR![rat_root,0];
+  //We were previously choosing a rational root as the base point of the Riemann surface,
+  //Now we use the default basepoint and see which root in M corresponds to this basepoint so that we can act on it by Galois. 
+  //assert exists(rat_root){ a : a in frootsM | IsCoercible(Rationals(),a) };
+  //assert IsCoercible(XR,[rat_root,0]);
+  //XR`BasePoint := XR![rat_root,0];
   
   GL4Z:=GL(4,Integers());
   endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
@@ -70,16 +78,16 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   //AbelJacobi() uses BPM = BigPeriodMatrix whereas the endomorphisms package uses PM = PeriodMatrix
   PM := ChangeRing(PeriodMatrix(X),CC);
-  printf "PM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(PM), NumberOfColumns(PM), PM;
+  //printf "PM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(PM), NumberOfColumns(PM), PM;
 	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
-  printf "BPM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(BPM), NumberOfColumns(BPM), BPM;
+  //printf "BPM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(BPM), NumberOfColumns(BPM), BPM;
 	P1:=ColumnSubmatrix(BPM,1,2);
   P2 := ColumnSubmatrix(BPM,3,2);
   SPM:=ChangeRing(SmallPeriodMatrix(XR),CC);
   //according to the magma documentation SPM = P1^-1*P2, which we assert here. Note BPM = [ P1 P2 ]
   assert NumericalRank(SPM - P1^-1*P2 : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0;
 
-  printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
+  //printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
 
   //Check that M*PM = PM*R in the notation of Costa-Mascot-Sijsling-Voight.
   assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0 };
@@ -100,16 +108,16 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
 //   assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
 
+  /*
   swap_mat := Matrix(Integers(),4,4,[Coordinates(Latendo!Eltseq(RealVector(col))) : col in BPM_halfcols])^-1;
   newendosM4 := [swap_mat*endosM4[i]*swap_mat^-1 : i in [1..#endosM4]];
 
-/*
   print [x in Bmat : x in newendosM4];
   newendosM2 := [&+[Eltseq(O!maptoB(Bmat!newendosM4[i]))[j]*endosM2[j] : j in [1..4]] : i in [1..4]];
   OtoM2C := map< O -> KMatrixSpace(CC,2,2) | a :-> &+[ Eltseq(O!a)[i]*newendosM2[i] : i in [1..4] ] >;
   assert forall(e){ Basis(O)[i] : i in [1..4] | OtoM2C(Basis(O)[i]) eq newendosM2[i] };
   printf "Modified OtoM2C to work with BigPeriodMatrix\n";
-*/
+  */
 
   Omod2:=quo(O,2);
   coefs := [ [w,x,y,z] : w,x,y,z in [0,1] ];
@@ -144,7 +152,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   map_init:=[];
   for sigma in Gal do
     //Qsigma is what we get when we act on Q by the Galois element sigma. It is still a two torsion point.
-    Qsigma := 1/2*(P1)*AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0], XR`BasePoint);
+    Qsigma := 1/2*(P1)*(AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0], XR`BasePoint) - AbelJacobi(XR![Evaluate(map(sigma)(x0),embC),0], XR`BasePoint));
     cyclic_coefficients:=[ a : a in O_elts | IsCoercible(Latendo,Eltseq(RealVector(OtoM2C(a)*Q - Qsigma))) ];
     assert #cyclic_coefficients eq 1;
     //index:=Index(Omod2_eltsCC,cyclic_coefficients[1]);

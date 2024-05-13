@@ -1,10 +1,13 @@
 Rx<x>:=PolynomialRing(Rationals());
 //f:=-x^5+4*x^4-10*x^3+8*x^2-2*x; //this one actually works
+f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
+f := 2*x^6+9*x^5+6*x^4+2*x^3-6*x-4; //this one doesn't have a rational root.
 prec:=30;
 CC:=ComplexField(prec);
-f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
 X:=HyperellipticCurve(f);
 N:=2;
+GalM,map2,f2:=Mod2GaloisMapPQM(X);
+f2;
 
 GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X);
   
