@@ -1,13 +1,69 @@
 
 
  
-t:=27;
+//t:=27; //smaller image
+t:=19; //image has size 48, enhanced rep is a hom!
 
 Rx<x>:=PolynomialRing(Rationals());
 f:=x^5 + 8*x^4 + t*x^3 + 16*x^2-4*x;
-C:=HyperellipticCurve(f);
-X:=C;
+
+
 prec:=30;
+CC:=ComplexField(prec);
+X:=HyperellipticCurve(f);
+TwoTorsionSubgroup(Jacobian(X));
+
+GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X : prec:=prec);
+
+rho2_image := [ rho2(a) : a in GalM ];
+rho2_image_GL4 := [ EnhancedElementInGL4modN(a,2) : a in rho2_image ];
+rho2_image_GL4elts:= Set(rho2_image_GL4);  //size is 24 since map to GL4 not injective for N=2
+
+mod2rep:=mod2Galoisimage(X);
+mod2rep_elts:=Set([ GL(4,ResidueClassRing(2))!a : a in mod2rep ]);
+
+Oenh_elts:=[ Inverse(perm_rep)(a) : a in Codomain(perm_rep) ];
+for elt in Oenh_elts do 
+    rho2_image_GL4 := [ EnhancedElementInGL4modN(elt*a*elt^-1,2) : a in rho2_image ];
+    rho2_image_GL4elts := Set(rho2_image_GL4);  //size is 24 since map to GL4 not injective for N=2
+    if mod2rep_elts eq rho2_image_GL4elts then 
+        elt;
+    end if;
+end for;
+
+
+
+//create the permutation representation so we can work with the semidirect product as a group
+perm_rep:=EnhancedPermutationRepresentationMod2(O,mu);
+
+
+
+
+
+
+
+
+
+//list the subgroups of the semidirect product with size 48 and autmuO part of size 12 up to conjugation
+G48list := [ sub`subgroup : sub in Subgroups(Codomain(perm_rep)) | #sub`subgroup eq 48 ];
+G48enhlist := [ [ Inverse(perm_rep)(a) : a in sub ] : sub in G48list ];
+G48enhlist := [ sub : sub in G48enhlist | #Set([a`element[1] : a in sub]) eq 12 ];
+
+rho2_image := [ rho2(a) : a in GalM ];
+
+Omod2_elements := Setseq(Set(quo(O,2)));
+Omod2_units := [ a : a in Omod2_elements | IsUnit(a) ];
+Oenh:=Codomain(rho2);
+
+
+
+
+
+N:=2;
+GalM,map2,f2:=Mod2GaloisMapPQM(X);
+GalM;
+f2;
+
 
 L:=OptimizedRepresentation(HeuristicEndomorphismFieldOfDefinition(C));
 assert GroupName(GaloisGroup(L)) eq "D6";

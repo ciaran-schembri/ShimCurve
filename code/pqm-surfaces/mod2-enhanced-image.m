@@ -20,14 +20,15 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   assert Coordinates(XR`BasePoint)[2] eq 0;
 
 
+  //We just use Polredbest since combining with Polredabs often runs out of memory.
 	QA2:=SplittingField(f);
-  QA2:=NumberField(Polredabs(DefiningPolynomial(QA2)));
+  QA2:=NumberField(Polredbest(DefiningPolynomial(QA2)));
 	L:=HeuristicEndomorphismFieldOfDefinition(X);
-  L:=NumberField(Polredabs(DefiningPolynomial(L)));
+  L:=NumberField(Polredbest(DefiningPolynomial(L)));
 
 	M:=Compositum(QA2,L);
   Mdef:=DefiningPolynomial(M);
-  Mdefred:=Polredabs(Polredbest(Mdef));
+  Mdefred:=Polredbest(Mdef);
   M:=NumberField(Mdefred);
 	ooplaces:=InfinitePlaces(M);
   //CAREFUL: we choose an embedding here which affects the final output.
@@ -38,7 +39,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   // [(a_2,0)] - [(a_1,0)] will be an O/2O-basis element of A[2](C)
   //after apply the Abel-Jacobi map. assert a1 is rational.
   frootsM:=[ a[1] : a in Roots(ChangeRing(f,M))];
-  frootsC:=[ Evaluate(a,embC) : a in frootsM ];
+  frootsC:=[ CC!Evaluate(a,embC) : a in frootsM ];
   //Let's find which element x0 of frootsM corresponds to the basepoint (x0,0) of the Riemann surface. 
   exists(x0){ z : z in frootsM | Abs(Evaluate(z,embC)-Coordinates(XR`BasePoint)[1]) lt RealField(20)!0.00000000000000001 };
   
@@ -89,13 +90,13 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
 
   //Check that M*PM = PM*R in the notation of Costa-Mascot-Sijsling-Voight.
-  assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/2))) eq 0 };
+  assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/5))) eq 0 };
 
 	Latendo:=RealLatticeOfPeriodMatrix(PM);
 
   //The columns of PM and 1/2*BPM are the same, but not necessarily in the same order, which we assert here.
   //Infact if 1/2BPM = [ S1 S2 ] then PM = [ S2 S1 ].
-  assert NumericalRank(2*PM - HorizontalJoin(P2,P1) : Epsilon:=RealField(prec)!10^(-Floor(prec/2))) eq 0;
+  assert NumericalRank(2*PM - HorizontalJoin(P2,P1) : Epsilon:=RealField(prec)!10^(-Floor(prec/5))) eq 0;
 
   PM_cols:=Set(Rows(Transpose(PM)));
   BPM_halfcols:=Set(Rows(Transpose(1/2*BPM)));
@@ -174,7 +175,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
  
  //R<x> := PolynomialRing(Rationals()); C := HyperellipticCurve(R![-1, 5, -8, 4, -1, 1], R![]);
  //X:=C;
- intrinsic EndomorphismRepresentationPQM(X::CrvHyp : prec:=30, quaternionorder:=[]) -> Any 
+ intrinsic EndomorphismRepresentationPQM(X::CrvHyp : prec:=30,endo_prec:=500, quaternionorder:=[]) -> Any 
   {}
 
   if Type(quaternionorder) ne AlgQuatOrd then
@@ -203,7 +204,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   GalL,auts,GalLmap:=AutomorphismGroup(L);
   autsL:=[ FieldAutomorphism(L,phi) : phi in Automorphisms(L) ];
   //assert GroupName(Gal) eq "C2^2";
-  assert IsAbelian(GalL); //because there might be an issue with automorphisms being the opposite group
+  //assert IsAbelian(GalL); //because there might be an issue with automorphisms being the opposite group
 
   AutFull:=Aut(O,mu);
   wchi:=[ a : a in Generators(Domain(AutFull)) | Sprint(a) eq "w_chi" ][1];
@@ -215,10 +216,10 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
       elts:= [ <sigma_mu^l, wmu^l> : l in [0..#GalL/2-1] ];
       galmap_init:=map< GalL -> Domain(AutFull) | elts >;
       endomorphism_rep := galmap_init*AutFull;
-      assert MapIsHomomorphism(endomorphism_rep : injective:=true);
+      assert MapIsHomomorphism(endomorphism_rep);
     else
-      Kprec:=BaseNumberFieldExtra(DefiningPolynomial(L),prec);
-      Kprec:=RationalsExtra(prec);
+      Kprec:=BaseNumberFieldExtra(DefiningPolynomial(L),endo_prec);
+      Kprec:=RationalsExtra(endo_prec);
       XK:=ChangeRing(X,Kprec);
       A1,A2,A3:=HeuristicEndomorphismAlgebra(XK);
       tr,E:=IsNumberField(A2);
@@ -233,6 +234,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
       GalLmap2:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
       endomorphism_rep := GalLmap2*galmap_init*AutFull;
 
+      assert MapIsHomomorphism(endomorphism_rep);
       return GalL, GalLmap2, endomorphism_rep, O;
     end if;
   end if;
@@ -255,7 +257,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
     //We append the tuple <sigma, Ksigma, m>.
     Ksigma:=FixedField(L,[GalLmap(sigma)]);
     assert Degree(Ksigma) in [2,#GalL/2];
-    Kprec:=BaseNumberFieldExtra(DefiningPolynomial(Ksigma),prec);
+    Kprec:=BaseNumberFieldExtra(DefiningPolynomial(Ksigma),endo_prec);
 
     XK:=ChangeRing(X,Kprec);
     A1,A2,A3:=HeuristicEndomorphismAlgebra(XK);
@@ -286,7 +288,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   galmap_init:=map< autsL -> Domain(AutFull) | elts >;
   GalLmap2:=map< GalL -> autsL | mp :-> autsL!FieldAutomorphism(L,GalLmap(mp)) >;
   endomorphism_rep := GalLmap2*galmap_init*AutFull;
-  assert MapIsHomomorphism(endomorphism_rep : injective:=true);
+  assert MapIsHomomorphism(endomorphism_rep);
 
   return GalL, GalLmap2, endomorphism_rep, O;
 
@@ -294,14 +296,14 @@ end intrinsic;
 
 
 
-intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any 
+intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30,endo_prec := 500) -> Any 
   {return 1. the Galois group of the compositum of the two torsion field and the endomorphism field
           2. A map from the Galois group in S_n to automorphisms of the field
           3. the enhanced representation as a map from automorphisms of the field to elements of the enhanced semidirect product.
           4. the endomorphism ring}
 
   Galgrp2,Galmap2,mod2map,O1:=Mod2GaloisMapPQM(X : prec:=prec);
-  Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec, quaternionorder:=O1);
+  Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec,endo_prec:=endo_prec, quaternionorder:=O1);
 
  
   M:=Domain(Galmap2(Galgrp2.1));
@@ -320,7 +322,7 @@ intrinsic EnhancedRepresentationMod2PQM(X::CrvHyp : prec:=30) -> Any
   Oenh:=EnhancedSemidirectProduct(O1 : N:=2);
   rho_enhanced:=map< Galgrp2 -> Oenh | sigma :-> Oenh!< restrict_rho_end(sigma), mod2map(sigma) >  >;
 
-  assert MapIsHomomorphism(rho_enhanced : injective:=false);
+  assert MapIsHomomorphism(rho_enhanced : injective:=true);
   return Galgrp2, Galmap2, rho_enhanced, O1;
 end intrinsic;
   

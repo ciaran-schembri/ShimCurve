@@ -160,18 +160,21 @@ end intrinsic;
 
 intrinsic MapIsHomomorphism(f::Map : injective:=false) -> BoolElt
   {Check whether the map f: X --> Y is a homomorphism. Set injective := true to determine if it is also injective}
-  for x,y in Domain(f) do 
-    if not(f(x*y) eq f(x)*f(y)) then 
-      return false;
-    end if;
+  
+  if forall(elt){ <x,y> : x in Domain(f), y in Generators(Domain(f)) | f(x*y) eq f(x)*f(y) } then 
     if injective eq true then 
-      if ((f(x) eq f(y)) and (x ne y)) then 
+      if #Set([ f(z) : z in Domain(f) ]) eq #Set(Domain(f)) then 
+        return true;
+      else 
         return false;
       end if;
+    else 
+      return true;
     end if;
-  end for;
-  return true;
-end intrinsic 
+  else 
+    return false;
+  end if;
+end intrinsic; 
 
 
 intrinsic FixedSubspace(H::GrpMat) -> GrpAb
