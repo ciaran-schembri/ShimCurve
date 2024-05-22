@@ -9,6 +9,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   and the endomorphism field to F.}
 
   CC:=ComplexField(prec);
+  CC`epscomp:=10^-Floor(prec/2);
   assert BaseRing(X) eq Rationals();
   assert IsSimplifiedModel(X);
   B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);

@@ -15,12 +15,20 @@ TwoTorsionSubgroup(Jacobian(X));
 
 GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X : prec:=prec);
 
+tr,mu:=HasPolarizedElementOfDegree(O,1);
+//create the permutation representation so we can work with the semidirect product as a group
+perm_rep:=EnhancedPermutationRepresentationMod2(O,mu);
+
 rho2_image := [ rho2(a) : a in GalM ];
-rho2_image_GL4 := [ EnhancedElementInGL4modN(a,2) : a in rho2_image ];
+rho2_image_GL4 := [ GL(4,2)!EnhancedElementInGL4modN(a,2) : a in rho2_image ];
 rho2_image_GL4elts:= Set(rho2_image_GL4);  //size is 24 since map to GL4 not injective for N=2
+rho2_image_GL4grp := sub< GL(4,2) | rho2_image_GL4 >;
 
 mod2rep:=mod2Galoisimage(X);
-mod2rep_elts:=Set([ GL(4,ResidueClassRing(2))!a : a in mod2rep ]);
+mod2rep_elts:=Set([ GL(4,2)!a : a in mod2rep ]);
+
+assert GroupName(rho2_image_GL4grp) eq GroupName(mod2rep);
+IsGLConjugate(mod2rep,rho2_image_GL4grp);
 
 Oenh_elts:=[ Inverse(perm_rep)(a) : a in Codomain(perm_rep) ];
 for elt in Oenh_elts do 

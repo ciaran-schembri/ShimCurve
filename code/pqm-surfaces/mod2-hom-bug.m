@@ -1,6 +1,6 @@
 Rx<x>:=PolynomialRing(Rationals());
-f:=-x^5+4*x^4-10*x^3+8*x^2-2*x; //this one actually works
-//f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
+//f:=-x^5+4*x^4-10*x^3+8*x^2-2*x; //this one actually works
+f:= 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1; //this returns a map which is not a hom
 //f:=-83*x^6-909*x^5-3075*x^4-2875*x^3-2460*x^2+1422*x-844; //this has PQM disc 10, the map is a homomorphism!! It also has image of size 48 so takes about 30 mins to run. 
 
 prec:=30;
@@ -14,9 +14,7 @@ N:=2;
 GalM,map2,f2:=Mod2GaloisMapPQM(X);
 GalM;
 f2;
-
-GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X);
-  
+ 
 QA2:=SplittingField(f);
 L:=HeuristicEndomorphismFieldOfDefinition(X);
 assert Degree(L) eq 4;
