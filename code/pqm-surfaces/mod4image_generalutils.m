@@ -1,5 +1,5 @@
 Z4 := Integers(4);
-G2 := Sp(4,2);
+GSp2 := Sp(4,2);
 G := MatrixGroup<4,Z4|[
     [ 1, 0, 0, 1, 0, 1, 3, 0, 1, 1, 0, 1, 0, 1, 3, 1 ],
     [ 3, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 3 ],
@@ -15,7 +15,7 @@ G := MatrixGroup<4,Z4|[
     [ 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3 ],
     [ 3, 2, 0, 0, 0, 1, 0, 0, 0, 2, 1, 2, 0, 0, 0, 3 ]
 ]>;
-f := hom<G -> G2 | [ChangeRing(G.i,GF(2)) : i in [1..#Generators(G)]]>;
+f := hom<G -> GSp2 | [ChangeRing(G.i,GF(2)) : i in [1..#Generators(G)]]>;
 kerf := Kernel(f);
 
 P<x> := PolynomialRing(Rationals());
@@ -83,20 +83,20 @@ end intrinsic;
 intrinsic mod2image(C :: CrvHyp) -> GrpMat
 {returns the mod2 Galois image as a subgroup of GSp(4,F_2)}
     require Genus(C) eq 2 : "Genus must be 2";
-    G2 := Sp(4,GF(2));
+    GSp2 := Sp(4,2);
     S6 := Sym(6);
-    bool, phi := IsIsomorphic(S6, G2);
-    somesubsG2 := Subgroups(G2 : OrderEqual := 48);
+    bool, phi := IsIsomorphic(S6, GSp2);
+    somesubsGSp2 := Subgroups(GSp2 : OrderEqual := 48);
     somesubsS6 := Subgroups(S6 : OrderEqual := 48);
-    A := AutomorphismGroup(G2);
+    A := AutomorphismGroup(GSp2);
     assert exists(out_aut){g : g in Generators(A) | not IsInner(g)};
-    if Dimension(Fix(GModule(somesubsG2[1]`subgroup))) ne 0 then
-        somesubsG2 := Reverse(somesubsG2);
+    if Dimension(Fix(GModule(somesubsGSp2[1]`subgroup))) ne 0 then
+        somesubsGSp2 := Reverse(somesubsGSp2);
     end if;
     if #Orbits(somesubsS6[1]`subgroup) eq 2 then
         somesubsS6 := Reverse(somesubsS6);
     end if;
-    if IsConjugate(G2, somesubsG2[1]`subgroup, phi(somesubsS6[1]`subgroup)) then
+    if IsConjugate(GSp2, somesubsGSp2[1]`subgroup, phi(somesubsS6[1]`subgroup)) then
         goodphi := phi;
     else
         goodphi := phi*out_aut;
@@ -114,13 +114,12 @@ intrinsic mod2image(C :: CrvHyp) -> GrpMat
     end if;
 end intrinsic;
 
-intrinsic Mod2EnhancedImage(X :: CrvHyp : prec := 30) -> .
+intrinsic Mod2EnhancedImage(X :: CrvHyp : prec := 100) -> .
 {returns the image of the mod2 enhanced representation (as a subgroup of GL(4,Z/2) and as a set of enhanced elements).
-TODO: add details.}
+TODO: Enhance the image using image of endomorphism representation.}
     QQ := Rationals();
     CC := ComplexField(prec);
     Z2 := Integers(2);
-    G2X := ChangeRing(mod2image(X),Z2);
 
     endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
     endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
@@ -133,24 +132,62 @@ TODO: add details.}
 
     boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
     G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
-    printf "Index of Omod2cross in EnhancedSemidirectProduct is %o.\n", Index(G2,Omod2cross);
+/*
+    print aut2;
+    print Type(aut2);
+    printf "Type of aut2 is %o\n", Type(aut2);
+    printf "Type of Image(aut2) is %o\n", Type(Image(aut2));
+// Runtime error in '#': Map is not a coset table
+*/
+    printf "#G2 : %o, #Omod2cross: %o, #aut2 : %o\n", #G2, #Omod2cross, #Image(aut2);
+    printf "Index of Omod2cross in EnhancedSemidirectProduct is %o.\n\n", Index(G2,Omod2cross);
+G2 := ChangeRing(G2,GF(2));
+Gl4 := GL(4,2);
+GSp4 := Sp(4,2);
+ZGSp4 := [x`subgroup : x in Subgroups(GSp4 : OrderEqual := #G2) | IsConjugate(Gl4,G2,x`subgroup)];
+// This will not work in general, because the enhanced semidirect product G2 does not embed in GSp(4,2)
+// (or even GL(4,2)) in general. The homomorphism to GL(4,2) has a kernel in general.
+// Question: Why does this G2 embed uniquely in Sp(4,2)? Does it mean that this is not the map we want?
+assert #ZGSp4 eq 1;
+iG2 := ZGSp4[1];
+boo, M := IsConjugate(Gl4,G2,iG2);
+assert Conjugate(G2,M) eq iG2;
+i := hom<G2 -> GSp4 | [G2.i^M : i in [1..#GeneratorsSequence(G2)]]>;
+assert i(G2) eq iG2;
 
+/*
+newans := [Conjugate(ChagneRing(x,GF(2)),M) : x in ans];
+&and[x subset GSp4 : x in newans];
+IsConjugate(GSp4,newans[1],newans[2]);
+*/
+
+G2X := mod2image(X);
+
+// conjs_G2X := [x`subgroup : x in Subgroups(iG2 : OrderEqual := #G2X) | IsConjugate(GSp4,G2X,x`subgroup)];
+
+boo, M := IsConjugateSubgroup(GSp4,iG2,G2X);
+assert M in GSp4;
+G2X := Conjugate(G2X,M);
+assert G2X subset iG2;
+
+/*
     Gl4 := GL(4,Z2);
-    conjs_G2X := [H : H in Conjugates(Gl4,G2X) | H subset G2];
-    conjs_G2X := uptoGconjugacy(G2,conjs_G2X);
-    printf "There are %o GL(4)-conjugates of the mod-2 image, that lie inside EnhancedSemidirectProduct.\n", #conjs_G2X;
+    G2X := ChangeRing(mod2image(X),Z2);
+    conjs_G2X := [x`subgroup : x in Subgroups(G2 : OrderEqual := #G2X) | IsConjugate(Gl4,G2X,x`subgroup)];
+    printf "There are %o GL(4)-conjugates of the mod-2 image, lying inside EnhancedSemidirectProduct up to conjugacy.\n", #conjs_G2X;
+*/
 
-    EndfieldGalgrp, Endfieldpols := HeuristicEndomorphismFieldAsSplittingField(X);
+    EndfieldGalgrp, Endfieldpols := HeuristicEndomorphismFieldAsSplittingField(ChangeRing(X,RationalsExtra(prec)));
     Endfield := SplittingField(Endfieldpols);
-    printf "Degree of Endomorphism field is %o.\n", Degree(Endfield);
     fX := HyperellipticPolynomials(SimplifiedModel(X));
     K2 := SplittingField(fX);
-    printf "Degree of 2-torsion field is %o.\n", Degree(K2);
 //    ind := Degree(Endfield, Endfield meet K2);
     ind := Degree(SplittingField([ChangeRing(g,K2) : g in Endfieldpols]), K2);
-    printf "Degree of compositum over 2-torsion field is %o.\n", ind;
+    printf "Endomorphism field degree: %o, 2-torsion field degree: %o.\nDegree of compositum over 2-torsion field: %o.\n\n", Degree(Endfield), Degree(K2), ind;
 
-    return conjs_G2X;
+    if ind eq 1 then return [ChangeRing(G2X @@ i,Z2)], ind; end if;
+    mod2enhimg_possibilities := [ChangeRing(x`subgroup, Z2) : x in Subgroups(G2 : OrderEqual := #G2X*ind) | IsConjugateSubgroup(G2,x`subgroup,G2X @@ i)];
+    return mod2enhimg_possibilities, ind;
 end intrinsic;
 
 QQ := Rationals();
@@ -812,7 +849,7 @@ based on sampling Frobenius matrices for primes upto a given bound.}
                 primesstart := primesstart + 1;
             end while;
 
-            Norm_mod2img := Normalizer(G2,mod2img);
+            Norm_mod2img := Normalizer(GSp2,mod2img);
             Norm_mod2img_inv := Norm_mod2img @@ f;
             BigG := GL(4,Integers(4));
             if #mod4imgover2fld ne 1 then assert IsElementaryAbelian(mod4imgover2fld); end if;
@@ -953,8 +990,8 @@ based on sampling Frobenius matrices for primes upto a given bound.}
     end if;
 end intrinsic;
 
-
-intrinsic Mod4EnhancedImage(X :: CrvHyp : prec := 30) -> .
+/*
+intrinsic Mod4EnhancedImage(X :: CrvHyp : prec := 100) -> .
 {returns the image of the mod4 enhanced representation (as a subgroup of GL(4,Z/4) and as a set of enhanced elements).
 TODO: add details.}
     Z4 := Integers(4);
@@ -966,7 +1003,7 @@ TODO: add details.}
     G4, Omod4cross, aut4 := EnhancedImageGL4(O,nu,4);
     phi := hom<G4 -> G2 | [ChangeRing(g,Z2) : g in GeneratorsSequence(G4)]>;
     kerphi := Kernel(phi);
-    printf "Enhanced semi-direct products mod %o have orders %o.\nKernel of the natural reduction has abelian invariants %o.\n", [4,2], [#G4,#G2], AbelianInvariants(kerphi);
+    printf "Enhanced semi-direct products mod %o have orders %o.\nKernel of the natural reduction has abelian invariants %o.\n\n", [4,2], [#G4,#G2], AbelianInvariants(kerphi);
 
     Gl4 := GL(4,Z4);
     H, basis, Ls := mod4imageovertwotorsionfield(X);
@@ -979,7 +1016,7 @@ TODO: add details.}
     printf "Found %o possibilities for mod 4 image over 2-torsion field inside enhanced semidirect product.\n", #goodHs;
     pullback := mod2img @@ phi;
     mod4img_possibilities := &cat[Complements(pullback,kerphi,Hconj) : Hconj in goodHs];
-    printf "Found %o possibilities for mod 4 image over Q inside inside enhanced semidirect product.\n", #mod4img_possibilities;
+    printf "Found %o possibilities for mod 4 image over Q inside enhanced semidirect product.\n\n", #mod4img_possibilities;
     if #mod4img_possibilities eq 1 then return mod4img_possibilities[1]; end if;
 
     G2X := mod2image(X); assert IsConjugate(GL(4,Z2),mod2img,ChangeRing(G2X,Z2));
@@ -1001,10 +1038,69 @@ TODO: add details.}
     end for;
     AllconjsofansinG4_uptoG4conjugacy := uptoGconjugacy(G4,AllconjsofansinG4);
 */
+/*
     AllconjsofansinG4_uptoG4conjugacy := [x`subgroup : x in Subgroups(G4 : OrderEqual := #ans) | IsConjugate(Gl4,ans,x`subgroup)];
     printf "Found %o GL4-conjugates of the just-found mod 4 image, lying inside the enhanced semidirect product upto conjugacy\n", #AllconjsofansinG4_uptoG4conjugacy;
     final := [x : x in AllconjsofansinG4_uptoG4conjugacy | IsConjugate(G2,phi(x),mod2img)];
     if #final eq 1 then return final[1]; end if;
     return final;
 end intrinsic;
+*/
 
+intrinsic Mod4EnhancedImage(X :: CrvHyp : prec := 100) -> .
+{returns the image of the mod4 enhanced representation (as a subgroup of GL(4,Z/4) and as a set of enhanced elements).
+TODO: add details.}
+    Z4 := Integers(4);
+    Z2 := Integers(2);
+    Galgrp_end, Galmap_end, rho_end, O := EndomorphismRepresentationPQM(X : prec := prec);
+    boo, nu := HasPolarizedElementOfDegree(O,1); assert boo;
+    G2, Omod2cross, aut2 := EnhancedImageGL4(O,nu,2);
+    G4, Omod4cross, aut4 := EnhancedImageGL4(O,nu,4);
+    phi := hom<G4 -> G2 | [ChangeRing(g,Z2) : g in GeneratorsSequence(G4)]>;
+    kerphi := Kernel(phi);
+    printf "Enhanced semi-direct products mod %o have orders %o.\nKernel of the natural reduction has abelian invariants %o.\n\n", [4,2], [#G4,#G2], AbelianInvariants(kerphi);
+
+    mod2img := mod2image(X);
+    printf "Galois image mod 2 has order %o\n", #mod2img;
+    Gl4 := GL(4,Z4);
+    H, basis, Ls := mod4imageovertwotorsionfield(X);
+    assert IsElementaryAbelian(H);
+    printf "Galois image mod 4 has order %o,\nwith abelian invariants of kernel = %o.\n", #mod2img*#H, AbelianInvariants(H);
+/*
+    ConjugatesH := Conjugates(Gl4,H);
+    goodHs := [Hconj : Hconj in ConjugatesH | Hconj subset kerphi];
+    goodHs := uptoGconjugacy(G4,goodHs);
+    assert #goodHs ge 1;
+    printf "Found %o possibilities for mod 4 image over 2-torsion field inside enhanced semidirect product.\n", #goodHs;
+    pullback := ChangeRing(mod2img,Z2) @@ phi;
+    mod4img_possibilities := &cat[Complements(pullback,kerphi,Hconj) : Hconj in goodHs];
+    printf "Found %o possibilities for mod 4 image over Q inside enhanced semidirect product.\n\n", #mod4img_possibilities;
+    if #mod4img_possibilities eq 1 then return mod4img_possibilities[1]; end if;
+*/
+
+    printf "Sampling Frobenius to compute image in GSp(4,Z/4)...\n";
+    ans := PossibilitiesFromFrobSampling(X, mod2img, H);
+    printf "Found %o possibilities for mod 4 image over Q inside GSp(4,Z/4).\n", #ans;
+    assert #ans eq 1;
+    ans := ans[1];
+/*
+    f2 := hom<ans -> GL(4,Z2) | [ChangeRing(g,Z2) : g in GeneratorsSequence(ans)]>;
+    ans4over2 := Kernel(f2);
+    AllconjsofansinG4 := [];
+    printf "Trying to find all those GL4-conjugates of the just-found mod 4 image, that lie in the enhanced semidirect product...\n";
+    for Hconj in goodHs do
+        boo, M := IsConjugate(Gl4,ans4over2,Hconj);
+        newans := Conjugate(ans,M);
+        assert Hconj subset newans;
+        AllconjsofansinG4 := AllconjsofansinG4 cat [x : x in Conjugates(Normalizer(Gl4,Hconj),newans) | x subset G4];
+    end for;
+    AllconjsofansinG4_uptoG4conjugacy := uptoGconjugacy(G4,AllconjsofansinG4);
+*/
+    AllconjsofansinG4_uptoG4conjugacy := [x`subgroup : x in Subgroups(G4 : OrderEqual := #ans) | IsConjugate(Gl4,ans,x`subgroup)];
+    printf "Found %o GL4-conjugates of the just-found mod 4 image, lying inside the enhanced semidirect product upto conjugacy\n", #AllconjsofansinG4_uptoG4conjugacy;
+    mod2enhimg := Mod2EnhancedImage(X);
+    printf "Number of mod2enhimg possibilities : %o\n\n", #mod2enhimg;
+    final := [x : x in AllconjsofansinG4_uptoG4conjugacy | exists(y){y : y in mod2enhimg | IsConjugate(G2,phi(x),y)}];
+    if #final eq 1 then return final[1]; end if;
+    return final;
+end intrinsic;
