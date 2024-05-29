@@ -1,0 +1,193 @@
+Magma V2.28-8     Wed May 29 2024 12:56:59 on LEGENDRE [Seed = 
+3338134713]
+
++-------------------------------------------------------------------+
+|       This copy of Magma has been made available through a        |
+|                   generous initiative of the                      |
+|                                                                   |
+|                         Simons Foundation                         |
+|                                                                   |
+| covering U.S. Colleges, Universities, Nonprofit Research entities,|
+|               and their students, faculty, and staff              |
++-------------------------------------------------------------------+
+
+Type ? for help.  Type <Ctrl>-D to quit.
+
+Loading startup file "/scratch/home/cs/.magmarc"
+
+
+Can't open package spec file /scratch/home/cs/CHIMP/cm-calculations/magma/spec for reading (No such file or directory); referenced from /scratch/home/cs/CHIMP/CHIMP.spec
+Can't attach specfile /scratch/home/cs/CHIMP/cm-calculations/magma/spec
+Loading file "ShimCurve/code/pqm-surfaces/mod2-hom-tests.m"
+PQM6 EXAMPLES
+true
+Hyperelliptic Curve defined by y^2 = -x^5 + 4*x^4 - 10*x^3 + 8*x^2 - 2*x over Rational Field
+[
+<-4/5*i + 1/2*j + k, [0 0 1 1]>,
+<-5/2*j - k, [1 1 0 1]>
+]
+[
+[0 0 1 1]
+[0 1 1 0]
+[0 0 1 0]
+[1 0 1 0],
+
+[1 1 0 1]
+[0 1 1 0]
+[1 1 0 0]
+[0 1 0 0]
+]
+[ 1, 1/2 - 1/5*i - 1/2*j - k, 1/2 + i, 2/5*i + j ]
+6
+D4
+==============================
+true
+true
+Hyperelliptic Curve defined by y^2 = x^6 + 6*x^5 - 9*x^4 + 4*x^3 + 3*x^2 - 6*x - 3 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+Hyperelliptic Curve defined by y^2 = 3*x^5 + 3*x^4 - 4*x^3 + 3*x - 1 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+true
+Hyperelliptic Curve defined by y^2 = x^6 - 4*x^5 - 2*x^4 + 12*x^3 + 8*x^2 - 8*x - 8 over Rational Field
+[
+<-12/5*i + j + 2*k, [1 1 0 0]>,
+<-12/5*i + j + 2*k, [0 1 0 0]>
+]
+[
+[1 1 0 0]
+[0 0 0 1]
+[1 0 0 0]
+[0 0 1 1],
+
+[0 1 0 0]
+[0 0 1 1]
+[1 1 0 0]
+[0 0 1 0]
+]
+[ 1, 1/2 + 1/5*i - 1/2*j - k, 1/2 + i, 2/5*i + 3/2*j + k ]
+6
+C2*A4
+==============================
+true
+Hyperelliptic Curve defined by y^2 = 2*x^6 + 9*x^5 + 6*x^4 + 2*x^3 - 6*x - 4 over Rational Field
+[
+<-8*k, [1 1 0 1]>,
+<-8*k, [0 0 1 0]>,
+<-4*j, [1 0 1 1]>
+]
+[
+[1 1 0 1]
+[1 1 0 0]
+[0 0 1 1]
+[1 0 1 1],
+
+[0 0 1 0]
+[1 0 1 0]
+[0 1 0 1]
+[0 1 0 0],
+
+[1 0 1 1]
+[0 0 0 1]
+[1 1 1 0]
+[0 0 1 0]
+]
+[ 1, -1/2 + i + 2*k, 1/2 + i - 2*k, i + 2*j ]
+6
+C2*S4
+==============================
+true
+Hyperelliptic Curve defined by y^2 = -x^6 - 9*x^5 - 12*x^4 - 14*x^3 - 6*x^2 + 6*x + 4 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+true
+Hyperelliptic Curve defined by y^2 = -x^6 + 6*x^5 - 20*x^3 - 12*x^2 + 8 over Rational Field
+[
+<-12/5*i + j + 2*k, [0 0 1 0]>,
+<-12/5*i + j + 2*k, [0 1 0 1]>
+]
+[
+[0 0 1 0]
+[1 0 1 0]
+[0 1 0 1]
+[0 1 0 0],
+
+[0 1 0 1]
+[1 1 1 0]
+[0 1 1 1]
+[1 0 1 0]
+]
+[ 1, 1/2 + 1/5*i - 1/2*j - k, 1/2 + i, 2/5*i + 3/2*j + k ]
+6
+C2*A4
+==============================
+true
+true
+Hyperelliptic Curve defined by y^2 = -x^6 - 8*x^5 - 2*x^4 + 36*x^3 - 16*x^2 + 8*x + 8 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+Hyperelliptic Curve defined by y^2 = 13*x^6 - 30*x^5 - 165*x^4 - 148*x^3 + 159*x^2 + 150*x - 71 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+Hyperelliptic Curve defined by y^2 = 9*x^6 - 18*x^5 - 27*x^4 + 12*x^3 - 9*x^2 - 18*x + 11 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================
+true
+Hyperelliptic Curve defined by y^2 = x^6 + 30*x^5 + 207*x^4 + 414*x^3 + 51*x^2 + 18*x + 1 over Rational Field
+
+EnhancedRepresentationMod2PQM(
+X: X
+)
+In file "/scratch/home/cs/ShimCurve/code/pqm-surfaces/mod2-enhanced-image.m", line 326, column 3:
+>>   assert MapIsHomomorphism(rho_enhanced : injective:=true);
+     ^
+Runtime error in assert: Assertion failed
+==============================

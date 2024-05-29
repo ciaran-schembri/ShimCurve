@@ -24,11 +24,12 @@ rho2_image_GL4 := [ GL(4,2)!EnhancedElementInGL4modN(a,2) : a in rho2_image ];
 rho2_image_GL4elts:= Set(rho2_image_GL4);  //size is 24 since map to GL4 not injective for N=2
 rho2_image_GL4grp := sub< GL(4,2) | rho2_image_GL4 >;
 
+//check with Mod2EnhancedImage();
 mod2rep:=mod2Galoisimage(X);
 mod2rep_elts:=Set([ GL(4,2)!a : a in mod2rep ]);
 
 assert GroupName(rho2_image_GL4grp) eq GroupName(mod2rep);
-IsGLConjugate(mod2rep,rho2_image_GL4grp);
+IsGLConjugate(mod2rep,rho2_image_GL4grp); //true
 
 Oenh_elts:=[ Inverse(perm_rep)(a) : a in Codomain(perm_rep) ];
 for elt in Oenh_elts do 
