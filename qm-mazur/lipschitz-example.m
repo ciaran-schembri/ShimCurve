@@ -46,6 +46,75 @@ end for;
 perm_rep:=EnhancedPermutationRepresentationMod2(O,mu);
 
 
+//////////////////////////////////////////////////////////////////////
+//This is the BELYI MAP downloaded straight from the LMFDB with no twisting yet.
+//This was found by computing the ramification data associated to the subgroup H 
+//which we expect to give us four torsion on a family of (1,2) polarized surfaces 
+//and then looking it up in the LMFDB.
+
+// Group theoretic data
+
+d := 8;
+i := 1;
+G := TransitiveGroup(d,i);
+sigmas := [[Sym(8) | [4, 5, 6, 3, 8, 1, 2, 7], [1, 3, 8, 6, 5, 7, 4, 2], [4, 6, 7, 1, 8, 2, 3, 5]]];
+embeddings := [ComplexField(15)![1.0, 0.0]];
+
+// Geometric data
+
+// Define the base field
+K<nu> := RationalsAsNumberField();
+// Define the curve
+X := Curve(ProjectiveSpace(PolynomialRing(K, 2)));
+// Define the map
+KX<x> := FunctionField(X);
+phi := 27/16*x^4/(x^8+4*x^7+4*x^6+1/2*x^5+31/32*x^4-1/16*x^3+1/16*x^2-1/128*x+1/4096);
+// Plane model
+R<t,u> := PolynomialRing(K,2);
+X_plane := Curve(Spec(R), (-1)*u^4*t + (2*u^2 + 2*u - 1)^3*(2*u^2 + 10*u - 1));
+KX_plane<t,u> := FunctionField(X_plane);
+a := 432;
+phi_plane := (1/a)*t;
+
+
+
+//The abc triple has paritions 4,4; 3,3,1,1; 2,2,2,2
+//the convention is (0,1,oo)
+//We have to match this up with the (2,4,6) triangle group
+//0 has to correspond to ramification of multiplicity 4,
+//but we cannot be sure about the other two. Matching it up with
+//the parameter from Elkies' paper phi has to be one of these two:
+phi1Elk:=(27/16)*LFT(phi,[2,1,3])+1;
+phi2Elk:=(27/16)*LFT(phi,[2,3,1])+1;
+
+//Now we have to make a linear fractional transformation from 
+//Elkies' paper to the one he uses in his email and in section 7:
+//which we call T
+T1Elk := 432*phi1Elk/(phi1Elk-1);
+T2Elk := 432*phi2Elk/(phi2Elk-1);
+
+
+//Recall that the Lipschitz family has its level structure given 
+//by an index two subgroup so the parameter t is like an index 2 
+//cover of T.
+//This is given by T = t^2.
+
+//Hence the degree 8 belyi map phi should be of the 
+//form x |-> psi(x)^2 where psi is of degree 4.
+//We see that T1Elk does not have a generic squareroot, 
+//so T2Elk must be the correct one since it does:
+psi2 := 16*(x^2+1/8)*(x^2+2*x-1/8)/x^2;
+assert T2Elk eq phi2^2;
+assert Evaluate(Numerator(psi2-21),[1/4]);
+assert Evaluate(Numerator(-psi2-21),[-1/2]);
+
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 
 

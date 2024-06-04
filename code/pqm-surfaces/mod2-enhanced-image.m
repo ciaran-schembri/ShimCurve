@@ -8,8 +8,8 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   where it factors through adjoining the 2-torsion field 
   and the endomorphism field to F.}
 
-  CC:=ComplexField(prec);
-  CC`epscomp:=10^-Floor(prec/2);
+  CC:=ComplexFieldExtra(prec);
+  //CC`epscomp:=10^-Floor(prec/2);
   assert BaseRing(X) eq Rationals();
   assert IsSimplifiedModel(X);
   B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);
@@ -31,6 +31,13 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   Mdef:=DefiningPolynomial(M);
   Mdefred:=Polredbest(Mdef);
   M:=NumberField(Mdefred);
+
+  if Degree(M) eq Degree(QA2) then 
+    print "L is a subsfield of QA2";
+  else 
+    print "L is not a subfield of QA2";
+  end if;
+
 	ooplaces:=InfinitePlaces(M);
   //CAREFUL: we choose an embedding here which affects the final output.
 	embC:=ooplaces[1];
@@ -56,12 +63,12 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
 
   //We were previously choosing a rational root as the base point of the Riemann surface,
   //Now we use the default basepoint and see which root in M corresponds to this basepoint so that we can act on it by Galois. 
-  //assert exists(rat_root){ a : a in frootsM | IsCoercible(Rationals(),a) };
-  //assert IsCoercible(XR,[rat_root,0]);
-  //XR`BasePoint := XR![rat_root,0];
-  
+
+	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
+
   GL4Z:=GL(4,Integers());
-  endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
+  //endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
+  endos := GeometricEndomorphismRepresentationCC(BPM);
   endosM2:=[ ChangeRing(m[1],CC) : m in endos ];
   endosM4:=[ ChangeRing(m[2],Rationals()) : m in endos ]; 
   Bmat:=MatrixAlgebra< Rationals(), 4 | endosM4 >;
@@ -78,9 +85,9 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //assert forall(e) { [b1,b2] : b1,b2 in Obasis | (OtoM2C(b1*b2) eq OtoM2C(b1)*OtoM2C(b2)) and (OtoM2C(b1+b2) eq OtoM2C(b1) + OtoM2C(b2)) };
 
   //AbelJacobi() uses BPM = BigPeriodMatrix whereas the endomorphisms package uses PM = PeriodMatrix
-  PM := ChangeRing(PeriodMatrix(X),CC);
+  //PM := ChangeRing(PeriodMatrix(X),CC);
   //printf "PM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(PM), NumberOfColumns(PM), PM;
-	BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
+
   //printf "BPM is a %ox%o matrix = \n%o\n\n",  NumberOfRows(BPM), NumberOfColumns(BPM), BPM;
 	P1:=ColumnSubmatrix(BPM,1,2);
   P2 := ColumnSubmatrix(BPM,3,2);
@@ -91,23 +98,23 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   //printf "P1 is a %ox%o matrix = \n%o\n\n",  NumberOfRows(P1), NumberOfColumns(P1), P1;
 
   //Check that M*PM = PM*R in the notation of Costa-Mascot-Sijsling-Voight.
-  assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(PM,CC) - ChangeRing(PM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/5))) eq 0 };
+  assert forall(e){ endo : endo in endos | NumericalRank(ChangeRing(endo[1],CC)*ChangeRing(BPM,CC) - ChangeRing(BPM,CC)*ChangeRing(endo[2],CC) : Epsilon := RealField(prec)!10^(-Floor(prec/5))) eq 0 };
 
-	Latendo:=RealLatticeOfPeriodMatrix(PM);
+	Latendo:=RealLatticeOfPeriodMatrix(BPM);
 
   //The columns of PM and 1/2*BPM are the same, but not necessarily in the same order, which we assert here.
   //Infact if 1/2BPM = [ S1 S2 ] then PM = [ S2 S1 ].
-  assert NumericalRank(2*PM - HorizontalJoin(P2,P1) : Epsilon:=RealField(prec)!10^(-Floor(prec/5))) eq 0;
+  //assert NumericalRank(2*PM - HorizontalJoin(P2,P1) : Epsilon:=RealField(prec)!10^(-Floor(prec/5))) eq 0;
 
-  PM_cols:=Set(Rows(Transpose(PM)));
-  BPM_halfcols:=Set(Rows(Transpose(1/2*BPM)));
-  assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
-  assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
+  //PM_cols:=Set(Rows(Transpose(PM)));
+  //BPM_halfcols:=Set(Rows(Transpose(1/2*BPM)));
+  //assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
+  //assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
 
-  PM_cols:=Rows(Transpose(PM));
-  BPM_halfcols:=Rows(Transpose(1/2*BPM));
-  assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
-//   assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
+  //PM_cols:=Rows(Transpose(PM));
+  //BPM_halfcols:=Rows(Transpose(1/2*BPM));
+  //assert forall(v){ col : col in BPM_halfcols | IsCoercible(Latendo,Eltseq(RealVector(col))) };
+  //assert forall(v){ col : col in BPM_halfcols | Coordinates(Latendo!Eltseq(RealVector(col))) in Rows(IdentityMatrix(Integers(),4)) };
 
   /*
   swap_mat := Matrix(Integers(),4,4,[Coordinates(Latendo!Eltseq(RealVector(col))) : col in BPM_halfcols])^-1;
@@ -130,7 +137,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   k:=1;
   while #cyclic_module lt 16 do
     //Q is an O/2O basis element coming from the roots of X after applying Abel-Jacobi 
-    Q:=1/2*P1*AbelJacobi(XR![frootsC[k],0],XR`BasePoint);
+    Q:=AbelJacobi(XR![frootsC[k],0],XR`BasePoint);
     //1/2*P1 because this is the change of basis required from the small period matrix lattice to Latendo
     k:=k+1;
     twotorsion_points:=[ OtoM2C(a)*Q : a in O_elts ];
@@ -153,7 +160,7 @@ intrinsic Mod2GaloisMapPQM(X::CrvHyp : prec:=30) -> Any
   map_init:=[];
   for sigma in Gal do
     //Qsigma is what we get when we act on Q by the Galois element sigma. It is still a two torsion point.
-    Qsigma := 1/2*(P1)*(AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0], XR`BasePoint) - AbelJacobi(XR![Evaluate(map(sigma)(x0),embC),0], XR`BasePoint));
+    Qsigma := (P1)*(AbelJacobi(XR![Evaluate(map(sigma)(frootsM[k-1]),embC),0], XR`BasePoint) - AbelJacobi(XR![Evaluate(map(sigma)(x0),embC),0], XR`BasePoint));
     cyclic_coefficients:=[ a : a in O_elts | IsCoercible(Latendo,Eltseq(RealVector(OtoM2C(a)*Q - Qsigma))) ];
     assert #cyclic_coefficients eq 1;
     //index:=Index(Omod2_eltsCC,cyclic_coefficients[1]);

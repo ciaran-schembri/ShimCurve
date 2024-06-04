@@ -18,9 +18,21 @@ for t in [19,20,21,22,24,25,26,27,28] do
 
         f:=x^5 + 8*x^4 + t*x^3 + 16*x^2-4*x;
 
+        X:=HyperellipticCurve(f);
         prec:=30;
         CC:=ComplexField(prec);
-        X:=HyperellipticCurve(f);
+
+        f:=HyperellipticPolynomials(X);
+        XR:=RiemannSurface(f,2 : Precision:=prec);
+
+        printf "The endomorphism package base point is %o\n", SmallBasePoint(X);
+        printf "The magma base point is %o\n", XR`BasePoint;
+
+        Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec, quaternionorder:=[]);
+
+        printf "The group name of the image of the endomorphism representation is %o\n",GroupName(Galgrp_end);
+        printf "The norms of elements in the image of the endomorphism representation are %o\n", Set([ SquarefreeFactorization(Norm(rho_end(g)`element)) : g in Galgrp_end ]);
+    
 
         GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X : prec:=prec);
         //create the permutation representation so we can work with the semidirect product as a group
@@ -35,12 +47,14 @@ for t in [19,20,21,22,24,25,26,27,28] do
 
         assert IsGLConjugate(mod2rep,rho2_image_GL4grp); 
 
+
+
         X;
         rho2_image_gens;
         rho2_image_GL4gens;
         Basis(O);
         Discriminant(O);
-        GroupName(rho2_image_GL4grp);
+        printf "The group name of the image in GL(4,2) is %o\n",GroupName(rho2_image_GL4grp);
         print "==============================";
     catch e  
         X;
@@ -81,6 +95,18 @@ for elt in PQM6curves do
         prec:=30;
         CC:=ComplexField(prec);
 
+        f:=HyperellipticPolynomials(X);
+        XR:=RiemannSurface(f,2 : Precision:=prec);
+
+        printf "The endomorphism package base point is %o\n", SmallBasePoint(X);
+        printf "The magma base point is %o\n", XR`BasePoint;
+
+        Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec, quaternionorder:=[]);
+
+        printf "The group name of the image of the endomorphism representation is %o\n",GroupName(Galgrp_end);
+        printf "The norms of elements in the image of the endomorphism representation are %o\n", Set([ SquarefreeFactorization(Norm(rho_end(g)`element)) : g in Galgrp_end ]);
+    
+
         GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X : prec:=prec);
         //create the permutation representation so we can work with the semidirect product as a group
         //perm_rep:=EnhancedPermutationRepresentationMod2(O,mu);
@@ -94,12 +120,14 @@ for elt in PQM6curves do
 
         assert IsGLConjugate(mod2rep,rho2_image_GL4grp); 
 
+
+
         X;
         rho2_image_gens;
         rho2_image_GL4gens;
         Basis(O);
         Discriminant(O);
-        GroupName(rho2_image_GL4grp);
+        printf "The group name of the image in GL(4,2) is %o\n",GroupName(rho2_image_GL4grp);
         print "==============================";
     catch e  
         X;
@@ -110,10 +138,6 @@ end for;
 
 
 
-*/
-
-
-/*
 PQM10curves:=
 [
 [-x^5-5*x^3-5*x,0],
@@ -144,6 +168,18 @@ for elt in PQM10curves do
         prec:=30;
         CC:=ComplexField(prec);
 
+        f:=HyperellipticPolynomials(X);
+        XR:=RiemannSurface(f,2 : Precision:=prec);
+
+        printf "The endomorphism package base point is %o\n", SmallBasePoint(X);
+        printf "The magma base point is %o\n", XR`BasePoint;
+
+        Galgrp_end,Galmap_end,rho_end:=EndomorphismRepresentationPQM(X : prec:=prec, quaternionorder:=[]);
+
+        printf "The group name of the image of the endomorphism representation is %o\n",GroupName(Galgrp_end);
+        printf "The norms of elements in the image of the endomorphism representation are %o\n", Set([ SquarefreeFactorization(Norm(rho_end(g)`element)) : g in Galgrp_end ]);
+    
+
         GalM,mapM,rho2,O :=EnhancedRepresentationMod2PQM(X : prec:=prec);
         //create the permutation representation so we can work with the semidirect product as a group
         //perm_rep:=EnhancedPermutationRepresentationMod2(O,mu);
@@ -157,12 +193,14 @@ for elt in PQM10curves do
 
         assert IsGLConjugate(mod2rep,rho2_image_GL4grp); 
 
+
+
         X;
         rho2_image_gens;
         rho2_image_GL4gens;
         Basis(O);
         Discriminant(O);
-        GroupName(rho2_image_GL4grp);
+        printf "The group name of the image in GL(4,2) is %o\n",GroupName(rho2_image_GL4grp);
         print "==============================";
     catch e  
         X;
@@ -170,4 +208,3 @@ for elt in PQM10curves do
         print "==============================";
     end try;
 end for;
-*/
