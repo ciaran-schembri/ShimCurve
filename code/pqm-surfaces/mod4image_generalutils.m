@@ -1044,17 +1044,50 @@ TODO: add details.}
 end intrinsic;
 */
 
+intrinsic GeometricEndomorphismOrder(X::CrvHyp : prec:=30) -> Any
+  {Given X/F such that Jac(X) is a PQM surface, returns the geometric endomorphism ring as an order in a quaternion algebra}
+
+    CC:=ComplexFieldExtra(prec);
+    //CC`epscomp:=10^-Floor(prec/2);
+    assert BaseRing(X) eq Rationals();
+    assert IsSimplifiedModel(X);
+    B1,B2,B3:=HeuristicEndomorphismAlgebra( X : CC:=true);
+    assert IsQuaternionAlgebra(B2);
+
+    f:=HyperellipticPolynomials(X);
+    XR:=RiemannSurface(f,2 : Precision:=prec);
+    //assert that the basepoint is of the form (x,0)
+    assert Coordinates(XR`BasePoint)[2] eq 0;
+
+    BPM:=ChangeRing(BigPeriodMatrix(XR),CC);
+    //endos:=HeuristicEndomorphismRepresentation( X : CC:=true);
+    endos := GeometricEndomorphismRepresentationCC(BPM);
+    endosM4:=[ ChangeRing(m[2],Rationals()) : m in endos ]; 
+    Bmat:=MatrixAlgebra< Rationals(), 4 | endosM4 >;
+    tr, B, maptoB := IsQuaternionAlgebra(Bmat);
+    //assert maptoB is indeed an algebra-hom
+    assert forall(b){ [Bmat.u,Bmat.v] : u,v in [1..4] | maptoB(Bmat.u*Bmat.v) eq maptoB(Bmat.u)*maptoB(Bmat.v) };
+
+    Obasis:=[ maptoB(b) : b in endosM4 ];
+    O:=QuaternionOrder(Obasis : IsBasis:=true);
+    assert Basis(O) eq Obasis;
+    return O;
+end intrinsic;
+
 intrinsic Mod4EnhancedImage(X :: CrvHyp : prec := 100, precise := true, Endring := 0) -> .
 {returns the image of the mod4 enhanced representation (as a subgroup of GL(4,Z/4) and as a set of enhanced elements).
 TODO: add details.}
     Z4 := Integers(4);
     Z2 := Integers(2);
     if Type(Endring) eq RngIntElt then
+/*
         try
             _, _, _, O := EndomorphismRepresentationPQM(X : prec := prec); // We just want O, to construct G4, G2.
         catch e;
             _, _, _, O := Mod2GaloisMapPQM(X : prec := prec); // We just want O, to construct G4, G2.
         end try;
+*/
+        O := GeometricEndomorphismOrder(X : prec := prec);
     else
         O := Endring;
     end if;
