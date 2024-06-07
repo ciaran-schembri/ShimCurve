@@ -104,9 +104,9 @@ T2Elk := 432*phi2Elk/(phi2Elk-1);
 //We see that T1Elk does not have a generic squareroot, 
 //so T2Elk must be the correct one since it does:
 psi2 := 16*(x^2+1/8)*(x^2+2*x-1/8)/x^2;
-assert T2Elk eq phi2^2;
-assert Evaluate(Numerator(psi2-21),[1/4]);
-assert Evaluate(Numerator(-psi2-21),[-1/2]);
+assert T2Elk eq psi2^2;
+assert Evaluate(Numerator(psi2-21),[1/4]) eq 0;
+assert Evaluate(Numerator(-psi2-21),[-1/2]) eq 0;
 
 
 
