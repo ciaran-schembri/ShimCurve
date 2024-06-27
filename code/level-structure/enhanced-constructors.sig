@@ -24,6 +24,7 @@ S,^,compute x^y in (O/N)^x,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatOrdResElt,,AlgQuatO
 S,^,compute x^y in B^x/F^x,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatProjElt,,AlgQuatProjElt,-38,-38,-38,-38,-38
 S,^,g^exp in enhanced semidirect product,0,2,0,0,0,0,0,0,0,148,,0,0,AlgQuatEnhElt,,AlgQuatEnhElt,-38,-38,-38,-38,-38
 S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatProjElt,,-1,-38,-38,-38,-38,-38
+S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatOrdResElt,,148,-38,-38,-38,-38,-38
 S,Order,order of element,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,-1,-38,-38,-38,-38,-38
 S,Norm,Norm of the element of the enhanced semidirect product as an element of (Z/N)^x,0,1,0,0,0,0,0,0,0,AlgQuatEnhElt,,321,-38,-38,-38,-38,-38
 S,PrimitiveElement,We consider the coset of x in B^x/Q^x: this coset has a unique representative b of squarefree and integral norm. Return b,0,1,0,0,0,0,0,0,0,18,,AlgQuatProjElt,-38,-38,-38,-38,-38
