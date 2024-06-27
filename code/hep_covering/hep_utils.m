@@ -208,7 +208,7 @@ the Fuchsian group Gamma by discs formed by the (2,3,7)-triangle group
     return cover_center;
 end intrinsic;
 
-intrinsic HeptagonalCoveringNew(Gamma::GrpPSL2, center::SpcHypElt) -> SeqEnum 
+intrinsic HeptagonalCoveringNew(Gamma::GrpPSL2, center::SpcHypElt) -> List
 {
     Compute a covering of the fundamental domain of Gamma centered at center 
 }
@@ -252,7 +252,7 @@ intrinsic HeptagonalCoveringNew(Gamma::GrpPSL2, center::SpcHypElt) -> SeqEnum
 
     Gamma`HeptCoverCenters := covering_centers;
 
-    return [1..#prunecenters];
+    return prunecenters;
 end intrinsic;
 
 
